@@ -1,0 +1,31 @@
+.dashboard {
+  margin-left: 10px;
+
+  .cardContainer {
+    padding: 10px;
+    margin: 10px 0px 0px 0px;
+  }
+
+  .div_sec {
+    border: 1px solid #ccc;
+    margin: 0;
+    padding: 10px 0 10px 5px !important;
+  }
+
+  .search {
+    font-weight: bold;
+    padding: 5px;
+  }
+
+  .number_shape {
+    width: 20px;
+    height: 20px;
+    background-color: #32c5d2;
+    display: inline-block;
+    text-align: center;
+    line-height: 18px;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 600;
+  }
+}
