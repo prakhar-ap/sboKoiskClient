@@ -31,6 +31,7 @@ class TextFieldWrapper extends Component {
                 rows={this.props.rows}
                 autoComplete={this.props.autoComplete}
                 size={"small"}
+                fullWidth={true}
             />
         );
 

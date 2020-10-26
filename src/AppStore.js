@@ -58,6 +58,14 @@ class AppStore {
     }
 
     @action
+    redirect = (data, url) => {
+        if (!this.isServer) {
+            window.history.pushState(data, null, url);
+            window.location.reload(true);
+        }
+    }
+
+    @action
     clearSession() {
         this.user = {};
         this.link = {};

@@ -1,18 +1,22 @@
 import {inject, observer} from "mobx-react";
-import {Card, Button, Grid, CardContent} from "@material-ui/core";
+import {Button, Grid} from "@material-ui/core";
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import React, {useEffect} from "react";
 import PropTypes from 'prop-types';
 import TableWrapper from "../common/wrappers/TableWrapper";
 import TextFieldWrapper from "../common/wrappers/TextFieldWrapper";
-import { createMuiTheme, withStyles, makeStyles, ThemeProvider } from '@material-ui/core/styles';
-import { green, purple } from '@material-ui/core/colors';
+import SelectWrapper from '../common/wrappers/SelectWrapper';
+import { withStyles } from '@material-ui/core/styles';
+import Paper from "@material-ui/core/Paper";
+import MenuItem from "@material-ui/core/MenuItem";
+import TextField from "@material-ui/core/TextField";
 
 const BootstrapButton = withStyles({
     root: {
         boxShadow: 'none',
         textTransform: 'none',
         fontSize: 14,
-        padding: '6px 12px',
+        padding: '6px 10px',
         border: '1px solid',
         lineHeight: 1.5,
         backgroundColor: '#3598dc',
@@ -52,6 +56,12 @@ function HomeDashboard({AppStore, HomeStore}) {
         vendors,
         handleFetch,
         handleChange,
+        handleAutoComplete,
+        handleTableClick,
+        subDistricts,
+        states,
+        banks,
+        districts,
         form,
     } = HomeStore;
 
@@ -59,13 +69,12 @@ function HomeDashboard({AppStore, HomeStore}) {
         handleFetch();
     }, []);
 
-
     const keys = {
         id: 'id',
-        values: ['id', 'name', 'bankName', 'mobile', 'pincode'],
+        values: ['id', 'name', 'mobile', 'pincode', 'bank'],
     };
 
-    const headers = ['id', 'name', 'bankName', 'mobile', 'pincode'];
+    const headers = ['#', 'name', 'mobile', 'pincode', 'bank'];
 
     const _handleChange = (event) => {
         handleChange(event);
@@ -78,7 +87,7 @@ function HomeDashboard({AppStore, HomeStore}) {
 
     return (
         <div className="dashboard">
-            <Card>
+            <Paper elevation={4}>
                 <Grid container spacing={1} item xs={12} className="cardContainer">
                     <Grid container spacing={1} item sm={6} lg={2} className="div_sec">
                         <Grid item xs={12}>
@@ -113,23 +122,27 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 <span className="search">Search by Sub district</span>
                             </label>
                         </Grid>
-                        <Grid item sm={6} lg={8}>
-                            <TextFieldWrapper
-                                name={"subDistrict"}
-                                value={form.subDistrict}
-                                type="text"
-                                placeholder={'Enter SubDistrict Name'}
-                                variant="outlined"
-                                onChange={_handleChange}/>
+                        <Grid item sm={7} lg={8}>
+                            <Autocomplete
+                                id="subdistrict-autocomplete"
+                                options={subDistricts}
+                                onInputChange={(event, value) => handleAutoComplete(event, value)}
+                                getOptionLabel={(option) => option.label}
+                                renderInput={(params) =>
+                                    <TextField
+                                        {...params}
+                                        name="subDistrict"
+                                        variant="outlined"
+                                        size={"small"}/>
+                                }
+                            />
                         </Grid>
-                        <Grid item sm={2}>
+                        <Grid item sm={1}>
                             <BootstrapButton
                                 variant="contained"
                                 color="primary"
                                 onClick={(e) => _handleGO(e,2)}
-                                disableRipple>
-                                Go
-                            </BootstrapButton>
+                                disableRipple>Go</BootstrapButton>
                         </Grid>
                     </Grid>
                     <Grid container spacing={1} item sm={6} lg={5} className="div_sec">
@@ -139,31 +152,43 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 <span className="search">Search by State, District, Bank</span>
                             </label>
                         </Grid>
-                        <Grid item sm={2} lg={3}>
-                            <TextFieldWrapper
+                        <Grid item sm={3} lg={3}>
+                            <SelectWrapper
                                 name={"state"}
                                 value={form.state}
-                                type="text"
-                                variant="outlined"
-                                onChange={_handleChange}/>
-                        </Grid>
-                        <Grid item sm={2} lg={3}>
-                            <TextFieldWrapper
-                                name={"bank"}
-                                value={form.bank}
-                                type="text"
-                                variant="outlined"
-                                onChange={_handleChange}/>
+                                onChange={_handleChange}>
+                                {states.map((state) => (
+                                    <MenuItem  key={state.id} value={state.name}>
+                                        {state.name}
+                                    </MenuItem>
+                                ))}
+                            </SelectWrapper>
                         </Grid>
                         <Grid item sm={3} lg={3}>
-                            <TextFieldWrapper
+                            <SelectWrapper
+                                name={"bank"}
+                                value={form.bank}
+                                onChange={_handleChange}>
+                                {banks.map((bank) => (
+                                    <MenuItem  key={bank.id} value={bank.name}>
+                                        {bank.name}
+                                    </MenuItem>
+                                ))}
+                            </SelectWrapper>
+                        </Grid>
+                        <Grid item sm={3} lg={3}>
+                            <SelectWrapper
                                 name={"district"}
                                 value={form.district}
-                                type="text"
-                                variant="outlined"
-                                onChange={_handleChange}/>
+                                onChange={_handleChange}>
+                                {districts.map((district) => (
+                                    <MenuItem  key={district.id} value={district.name}>
+                                        {district.name}
+                                    </MenuItem>
+                                ))}
+                            </SelectWrapper>
                         </Grid>
-                        <Grid item sm={2}>
+                        <Grid item sm={1}>
                             <BootstrapButton
                                 variant="contained"
                                 color="primary"
@@ -190,13 +215,18 @@ function HomeDashboard({AppStore, HomeStore}) {
                             </BootstrapButton>
                         </Grid>
                     </Grid>
-                    <Grid item sm={10} lg={6}>
-                        {showVendors &&
-                        <TableWrapper rows={vendors} headers={headers} keys={keys}/>
-                        }
-                    </Grid>
                 </Grid>
-            </Card>
+            </Paper>
+            <br />
+            <Grid item xs={6} sm={12} lg={6}>
+                {showVendors &&
+                <TableWrapper
+                    rows={vendors}
+                    headers={headers}
+                    keys={keys}
+                    onClick={(e) => handleTableClick(e, AppStore)}/>
+                }
+            </Grid>
         </div>
     )
 }

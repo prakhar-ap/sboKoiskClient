@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "name": "ABCD",
+    "mobile": "9578422210",
+    "pincode": "302004",
+    "bank": {
+      "id": "1",
+      "name": "first"
+    }
+  },
+  {
+    "id": "2",
+    "name": "EFGH",
+    "mobile": "9578422210",
+    "pincode": "302004",
+    "bank": {
+      "id": "2",
+      "name": "second"
+    }
+  },
+  {
+    "id": "3",
+    "name": "IJKL",
+    "mobile": "9578422210",
+    "pincode": "302004",
+    "bank": {
+      "id": "3",
+      "name": "third"
+    }
+  },
+  {
+    "id": "4",
+    "name": "MNOP",
+    "mobile": "9578422210",
+    "pincode": "302004",
+    "bank": {
+      "id": "4",
+      "name": "fourth"
+    }
+  }
+]

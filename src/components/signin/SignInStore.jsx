@@ -30,7 +30,7 @@ class SignInStore {
         function* (AppStore) {
             try {
                 AppStore.setUser(this.form);
-                yield Router.push('/home');
+                AppStore.redirect(null, '/home');
             } catch (e) {
                 console.log(e);
             }
