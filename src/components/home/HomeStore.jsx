@@ -110,8 +110,8 @@ class HomeStore {
     }
 
     @action
-    handleTableClick = (event, AppStore) => {
-        AppStore.redirect(null, `/customer?id=${this.form.pincode}`);
+    handleTableClick = async (event, AppStore) => {
+        AppStore.redirect(null, `/home/${this.form.pincode}`);
     }
 
     @action
