@@ -45,7 +45,7 @@ export default function Index() {
 
             <footer className={"footer"}>
                 Powered by{' '}
-                <img src="/vercel.svg" alt="Vercel Logo" className={"logo"} />
+                <img src="" alt="Vercel Logo" className={"logo"} />
             </footer>
         </div>
     )

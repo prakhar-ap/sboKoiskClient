@@ -3,6 +3,27 @@ import Tooltip from '@material-ui/core/Tooltip';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 
+const styles = theme => ({
+    root: {
+        color: 'rgba(0, 0, 0, 0.87)',
+        cursor: 'text',
+        display: 'inline-flex',
+        position: 'relative',
+        fontSize: '0.7rem',
+        boxSizing: 'border-box',
+        alignItems: 'center',
+        fontFamily: [
+            'Roboto',
+            '"Helvetica Neue"',
+            'Arial',
+            'sans-serif',
+        ].join(','),
+        fontWeight: 400,
+        lineHeight: '1.1876em',
+        letterSpacing: '0.00938em',
+    },
+});
+
 class SelectWrapper extends Component {
     constructor(props) {
         super(props);
@@ -18,6 +39,7 @@ class SelectWrapper extends Component {
             this.props.children.length === 1
                 ? this.props.children[0].props.value
                 : this.props.value;
+        const classes = styles();
         const textField = (
             <TextField
                 name={this.props.name}
@@ -26,6 +48,9 @@ class SelectWrapper extends Component {
                 helperText={this.state.errorText}
                 onChange={this.props.onChange}
                 SelectProps={this.props.SelectProps}
+                InputProps={{
+                    style: classes.root,
+                }}
                 disabled={disabled}
                 variant="outlined"
                 size={"small"}

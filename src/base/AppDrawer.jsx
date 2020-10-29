@@ -5,6 +5,7 @@ import Signin from "../pages/signin";
 import Home from '../pages/home';
 import Intro from '../pages/intro';
 import Details from '../pages/home/[customerId]';
+import NotFoundPage from '../pages/notfound';
 
 class AppDrawer extends Component {
     render() {
@@ -23,6 +24,7 @@ class AppDrawer extends Component {
                         </>
                     )}
                 />
+                <Route path="*" component={NotFoundPage} />
             </Switch>
         )
     }

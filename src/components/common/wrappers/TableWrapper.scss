@@ -1,6 +1,9 @@
-.title {
-  text-align: center;
-  font-family: arial, sans-serif;
+.summary {
+  font-family: "Segoe MDL2 Assets", sans-serif;
+  font-weight: 600;
+  margin: 20px 20px 20px 0;
+  font-size: 20px;
+  color: #32c5d2!important
 }
 
 .table {
@@ -10,6 +13,14 @@
   border: 3px solid #ddd;
   width: 100%;
   background-color: white;
+}
+
+.noData {
+  height: 100px;
+  align-items: center;
+  font-size: 15px;
+  font-weight: bolder;
+  margin: 50px 0 50px 50px;
 }
 
 .table td, .table th {
@@ -22,7 +33,7 @@
 .table tr:nth-child(even){background-color: whitesmoke;}
 
 .table>tbody>tr:hover {
-  border: 4px solid blue;
+  border: 3px solid blue;
   cursor: pointer;
 }
 

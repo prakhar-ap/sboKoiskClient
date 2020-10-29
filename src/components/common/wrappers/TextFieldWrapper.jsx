@@ -2,6 +2,27 @@ import React, {Component} from 'react';
 import { TextField } from '@material-ui/core';
 import PropTypes from 'prop-types';
 
+const styles = theme => ({
+    root: {
+        color: 'rgba(0, 0, 0, 0.87)',
+        cursor: 'text',
+        display: 'inline-flex',
+        position: 'relative',
+        fontSize: '0.7rem',
+        boxSizing: 'border-box',
+        alignItems: 'center',
+        fontFamily: [
+            'Roboto',
+            '"Helvetica Neue"',
+            'Arial',
+            'sans-serif',
+        ].join(','),
+        fontWeight: 400,
+        lineHeight: '1.1876em',
+        letterSpacing: '0.00938em',
+    },
+});
+
 class TextFieldWrapper extends Component {
     constructor(props) {
         super(props);
@@ -13,6 +34,7 @@ class TextFieldWrapper extends Component {
 
     render() {
         const {label} = this.props;
+        const classes = styles();
 
         const textField = (
             <TextField
@@ -21,8 +43,9 @@ class TextFieldWrapper extends Component {
                 defaultValue={this.props.defaultValue}
                 type={this.props.type}
                 onChange={this.props.onChange}
-                InputProps={this.props.InputProps}
-                className={this.props.className || this.props.name}
+                InputProps={{
+                    style: classes.root
+                }}
                 disabled={this.props.disabled}
                 placeholder={this.props.placeholder}
                 variant={this.props.variant}

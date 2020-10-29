@@ -1,6 +1,5 @@
 import {inject, observer} from "mobx-react";
 import {Button, Grid} from "@material-ui/core";
-import Autocomplete from '@material-ui/lab/Autocomplete';
 import React, {useEffect} from "react";
 import PropTypes from 'prop-types';
 import TableWrapper from "../common/wrappers/TableWrapper";
@@ -9,8 +8,10 @@ import SelectWrapper from '../common/wrappers/SelectWrapper';
 import { withStyles } from '@material-ui/core/styles';
 import Paper from "@material-ui/core/Paper";
 import MenuItem from "@material-ui/core/MenuItem";
-import TextField from "@material-ui/core/TextField";
+import config from '../../config';
+import AutoCompleteWrapper from '../common/wrappers/AutoCompleteWrapper';
 
+const {apiUrl} = config;
 const BootstrapButton = withStyles({
     root: {
         boxShadow: 'none',
@@ -49,6 +50,27 @@ const BootstrapButton = withStyles({
     },
 })(Button);
 
+const styles = theme => ({
+    root: {
+        color: 'rgba(0, 0, 0, 0.87)',
+        cursor: 'text',
+        display: 'inline-flex',
+        position: 'relative',
+        fontSize: '0.7rem',
+        boxSizing: 'border-box',
+        alignItems: 'center',
+        fontFamily: [
+            'Roboto',
+            '"Helvetica Neue"',
+            'Arial',
+            'sans-serif',
+        ].join(','),
+        fontWeight: 400,
+        lineHeight: '1.1876em',
+        letterSpacing: '0.00938em',
+    },
+});
+
 function HomeDashboard({AppStore, HomeStore}) {
     const {
         showVendors,
@@ -56,15 +78,15 @@ function HomeDashboard({AppStore, HomeStore}) {
         vendors,
         handleFetch,
         handleChange,
-        handleAutoComplete,
         handleTableClick,
-        subDistricts,
         states,
         banks,
         districts,
         form,
+        selection,
     } = HomeStore;
 
+    const classes = styles();
     useEffect(() => {
         handleFetch();
     }, []);
@@ -74,7 +96,7 @@ function HomeDashboard({AppStore, HomeStore}) {
         values: ['id', 'name', 'mobile', 'pincode', 'bank'],
     };
 
-    const headers = ['#', 'name', 'mobile', 'pincode', 'bank'];
+    const headers = ['#', 'name', 'mobile no.', 'pincode', 'bank name'];
 
     const _handleChange = (event) => {
         handleChange(event);
@@ -83,6 +105,10 @@ function HomeDashboard({AppStore, HomeStore}) {
     const _handleGO = (event, section) => {
         event.preventDefault();
         handleGo(section)
+    }
+
+    const _handleRowClick = (row) => {
+        handleTableClick(row, AppStore);
     }
 
     return (
@@ -96,7 +122,7 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 <span className="search">Search by Pincode</span>
                             </label>
                         </Grid>
-                        <Grid item sm={6} lg={7}>
+                        <Grid item sm={8} lg={7} xs={8}>
                             <TextFieldWrapper
                                 name={"pincode"}
                                 value={form.pincode}
@@ -122,19 +148,12 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 <span className="search">Search by Sub district</span>
                             </label>
                         </Grid>
-                        <Grid item sm={7} lg={8}>
-                            <Autocomplete
-                                id="subdistrict-autocomplete"
-                                options={subDistricts}
-                                onInputChange={(event, value) => handleAutoComplete(event, value)}
-                                getOptionLabel={(option) => option.label}
-                                renderInput={(params) =>
-                                    <TextField
-                                        {...params}
-                                        name="subDistrict"
-                                        variant="outlined"
-                                        size={"small"}/>
-                                }
+                        <Grid item sm={8} lg={8} xs={8}>
+                            <AutoCompleteWrapper
+                                placeholder={"Select Subdistrict name"}
+                                id={"subdistrict"}
+                                name={"mySubdistricts"}
+                                url={`${apiUrl}/subdistricts?searchTerm=`}
                             />
                         </Grid>
                         <Grid item sm={1}>
@@ -152,7 +171,7 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 <span className="search">Search by State, District, Bank</span>
                             </label>
                         </Grid>
-                        <Grid item sm={3} lg={3}>
+                        <Grid item sm={12} lg={3} xs={12}>
                             <SelectWrapper
                                 name={"state"}
                                 value={form.state}
@@ -164,7 +183,7 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 ))}
                             </SelectWrapper>
                         </Grid>
-                        <Grid item sm={3} lg={3}>
+                        <Grid item sm={12} lg={3} xs={12}>
                             <SelectWrapper
                                 name={"bank"}
                                 value={form.bank}
@@ -176,7 +195,7 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 ))}
                             </SelectWrapper>
                         </Grid>
-                        <Grid item sm={3} lg={3}>
+                        <Grid item sm={12} lg={3} xs={12}>
                             <SelectWrapper
                                 name={"district"}
                                 value={form.district}
@@ -199,8 +218,8 @@ function HomeDashboard({AppStore, HomeStore}) {
                         </Grid>
                     </Grid>
                     <Grid container spacing={1} item sm={6} lg={2} className="div_sec">
-                        <Grid item xs={12}>
-                            <label htmlFor="example2">
+                        <Grid item xs={12} className={'gps'}>
+                            <label htmlFor="example4">
                                 <span className="number_shape">4</span>
                                 <span className="search">GPS</span>
                             </label>
@@ -218,13 +237,14 @@ function HomeDashboard({AppStore, HomeStore}) {
                 </Grid>
             </Paper>
             <br />
-            <Grid item xs={6} sm={12} lg={6}>
+            <Grid item sm={12} lg={7} xs={12} className={'vendors'}>
                 {showVendors &&
                 <TableWrapper
                     rows={vendors}
                     headers={headers}
                     keys={keys}
-                    onClick={(e) => handleTableClick(e, AppStore)}/>
+                    onClick={_handleRowClick}
+                    selection={selection}/>
                 }
             </Grid>
         </div>

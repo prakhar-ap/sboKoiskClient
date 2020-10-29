@@ -45,6 +45,7 @@ class CustomerDetailsStore {
                 customer.bank = customer.bank.name;
                 customer.state = customer.state.name;
                 customer.district = customer.district.name;
+                this.details = customer;
             } catch (e) {
                 this.error = true;
             }
@@ -61,4 +62,4 @@ class CustomerDetailsStore {
     );
 }
 
-export default  CustomerDetailsStore;
+export default CustomerDetailsStore;

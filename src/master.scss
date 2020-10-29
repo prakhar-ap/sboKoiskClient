@@ -2,10 +2,12 @@
 @import './layout/Layout.scss';
 @import './pages/intro/index';
 
-@import 'src/components/home/HomeDashboard';
+@import './components/home/HomeDashboard.scss';
+@import './components/home/details/CustomerDetails.scss';
+@import './components/common/images/ResponsiveImage.scss';
+@import './components/common/wrappers/AutoCompleteWrapper.scss';
 @import './components/common/wrappers/TableWrapper.scss';
 @import './components/common/wrappers/TextFieldWrappper.scss';
 @import './components/signin/SignIn.scss';
-
 
 @import './variables.scss';

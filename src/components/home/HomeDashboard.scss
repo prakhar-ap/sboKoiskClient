@@ -3,14 +3,22 @@
 
   .cardContainer {
     padding: 10px;
-    margin: 10px 0px 0px 0px;
+    margin-top: 10px;
   }
 
   .div_sec {
     border: 1px solid #ccc;
     margin: 0;
     padding: 10px 0 10px 5px !important;
+    display: flex;
+    alignment: top;
+
+    .gps {
+      height: fit-content;
+      display: block;
+    }
   }
+
 
   .search {
     font-weight: bold;

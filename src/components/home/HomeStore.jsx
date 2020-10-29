@@ -2,6 +2,7 @@ import axios from 'axios';
 import {action, configure, observable, flow} from 'mobx';
 import {useStaticRendering} from 'mobx-react'
 import config from '../../config';
+import {throttle} from 'lodash';
 
 const {apiUrl} = config;
 const isServer = typeof window === 'undefined';
@@ -19,7 +20,7 @@ class HomeStore {
     form = {
         pincode: '',
         subDistricts: '',
-        bank: '--Select Bank--',
+        bank: '--All Bank--',
         state: '--Select State--',
         district: '--Select District--'
     }
@@ -31,7 +32,7 @@ class HomeStore {
     @observable
     banks = [{
         id: -1,
-        name: '--Select Bank--'
+        name: '--All Bank--'
     }];
     @observable
     districts = [{
@@ -41,7 +42,7 @@ class HomeStore {
     @observable
     subDistricts = [];
     @observable
-    selectedSubDistrict = null;
+    selection = '';
 
     @action
     handleGo = (section) => {
@@ -61,31 +62,33 @@ class HomeStore {
             this.showVendors = true;
         }
     };
-
     @action
     generateUrlParams = (section) => {
         let constructUrl = new URLSearchParams();
         const state = this.states.filter(k => k.name === this.form.state);
         const bank = this.banks.filter(k => k.name === this.form.bank);
         const district = this.districts.filter(k => k.name === this.form.district);
+        const subdistrict = localStorage.getItem('subdistrict');
 
         switch (section) {
             case 1:
             case 4:
                 constructUrl.append('pincode', this.form.pincode);
+                this.selection = `Pincode:${this.form.pincode}`;
                 break;
             case 2:
-                constructUrl.append('subDistrict', this.form.subDistricts);
+                constructUrl.append('subDistrict', subdistrict);
+                this.selection = `Subdistrict:${subdistrict}`;
                 break;
             case 3:
                 constructUrl.append('stateId', state.length >= 1 ? state[0].id : -1);
                 constructUrl.append('bankId', bank.length >= 1  ? bank[0].id : -1);
                 constructUrl.append('districtId', district.length >= 1 ? district[0].id : -1);
+                this.selection = `State,District,Bank: ${this.form.state},${this.form.district.replaceAll('-', '')},${this.form.bank.replaceAll('-', '')}`;
                 break;
         }
         return constructUrl;
     }
-
     @action
     handleChange = (event) => {
         this.form[event.target.name] = event.target.value;
@@ -105,13 +108,14 @@ class HomeStore {
         list.map(n => {
            n.id = i++;
            n.bank = n.bank ? n.bank.name : '';
+           n.name = n.name.replace('+', '');
         });
         return list;
     }
 
     @action
-    handleTableClick = async (event, AppStore) => {
-        AppStore.redirect(null, `/home/${this.form.pincode}`);
+    handleTableClick = async (row, AppStore) => {
+        AppStore.redirect(null, `/home/${row.detailId}`);
     }
 
     @action
@@ -119,14 +123,19 @@ class HomeStore {
         function* () {
             this.banks.push(...yield this.getData('banks'));
             this.states.push(...yield this.getData('states'));
+            localStorage.setItem('subdistrict', '');
         }.bind(this),
     );
 
     @action
     fetchVendors = flow (
         function* (params) {
-            const temp = yield this.getData(`vendor?${params}`);
-            this.vendors = temp ? this.formatVendorList(temp) : [];
+            try {
+                const temp = yield this.getData(`vendor?${params}`);
+                this.vendors = this.formatVendorList(temp);
+            } catch (e) {
+                this.vendors = [];
+            }
         }.bind(this),
     );
 
@@ -152,14 +161,15 @@ class HomeStore {
     @action
     handleAutoComplete = flow(
         function* (event, value) {
-            event.preventDefault();
-            if(!value) {
-                this.updateSelectedSubdistricts('');
-            } else {
-                this.updateSelectedSubdistricts(value);
-                const val = yield this.getData(`subdistricts?searchTerm=${value}`);
-                this.subDistricts = val ? val : [];
-                console.log('Form: ', this.form.subDistricts);
+            try {
+                if (!value) {
+                    this.updateSelectedSubdistricts('');
+                } else {
+                    this.updateSelectedSubdistricts(value);
+                    this.subDistricts = yield this.getData(`subdistricts?searchTerm=${value}`);
+                }
+            } catch (e) {
+                this.subDistricts = [];
             }
         }.bind(this),
     );
@@ -167,8 +177,8 @@ class HomeStore {
     @action
     getData = flow(
         function* (url) {
-             const result =  yield axios.get(`${apiUrl}/${url}`);
-             return result.data;
+            const result =  yield axios.get(`${apiUrl}/${url}`);
+            return result.data;
         }.bind(this),
     );
 
@@ -181,14 +191,14 @@ class HomeStore {
                 }
                 break;
             case 2:
-                if(!this.form.subDistricts) {
+                if(!localStorage.getItem('subdistrict')) {
                     err.push('Sub district cannot be empty');
                 }
                 break;
             case 3:
                 if(this.form.state === '--Select State--') {
                     err.push('Please select any one state');
-                } else if(this.form.bank === '--Select Bank--' &&
+                } else if(this.form.bank === '--All Bank--' &&
                     (this.form.district === '--Select District--' || this.form.district === '--All Districts--')) {
                     err.push('Please select any one of the bank or district');
                 }

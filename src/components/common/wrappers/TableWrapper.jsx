@@ -5,39 +5,45 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import PropTypes from 'prop-types';
-
-// const useStyles = makeStyles({
-//     table: {
-//         minWidth: 650,
-//     },
-// });
+import {TableContainer} from "@material-ui/core";
+import Paper from "@material-ui/core/Paper";
+import Grid from "@material-ui/core/Grid";
 
 function TableWrapper(props) {
-    const {rows, headers, keys, title, onClick} = props;
+    const {rows, headers, keys, onClick, selection} = props;
 
     return (
         <div>
-            {title &&
-                <h1 className="title">{title}</h1>
-            }
-            <Table className="table" aria-label="simple table">
-                <TableHead>
-                    <TableRow aria-disabled={true}>
-                        {headers.map(header => <TableCell key={header}>{header}</TableCell>)}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {rows.map((row) => (
-                        <TableRow key={row[keys.id]} className={"cell"} onClick={onClick}>
-                            {
-                                keys.values.map((key) => (
-                                    <TableCell key={row[key]}>{row[key]}</TableCell>
-                                ))
-                            }
+            <div className={'summary'}>
+                {rows.length} result(s) found for {selection}
+            </div>
+            <TableContainer component={Paper}>
+                {rows.length === 0 ?
+                    (
+                        <Grid className={'noData'}>
+                            No data to display!
+                        </Grid>
+                    ) : (
+                <Table className="table" aria-label="simple table">
+                    <TableHead>
+                        <TableRow aria-disabled={true}>
+                            {headers.map(header => <TableCell key={header}>{header}</TableCell>)}
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHead>
+                    <TableBody>
+                        {rows.map((row) => (
+                            <TableRow key={row[keys.id]} className={"cell"} onClick={() => onClick(row)}>
+                                {
+                                    keys.values.map((key) => (
+                                        <TableCell key={row[key]}>{row[key]}</TableCell>
+                                    ))
+                                }
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                    )}
+            </TableContainer>
         </div>
     );
 }
@@ -47,7 +53,8 @@ TableWrapper.propTypes = {
     headers: PropTypes.array.isRequired,
     keys: PropTypes.object,
     title: PropTypes.string,
-    onClick: PropTypes.func
+    onClick: PropTypes.func,
+    selection: PropTypes.string
 };
 
 export default TableWrapper;

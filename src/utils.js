@@ -10,7 +10,6 @@ function generate(length, set) {
     return result;
 }
 
-
 module.exports = {
     generate
 }
