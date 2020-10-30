@@ -50,27 +50,6 @@ const BootstrapButton = withStyles({
     },
 })(Button);
 
-const styles = theme => ({
-    root: {
-        color: 'rgba(0, 0, 0, 0.87)',
-        cursor: 'text',
-        display: 'inline-flex',
-        position: 'relative',
-        fontSize: '0.7rem',
-        boxSizing: 'border-box',
-        alignItems: 'center',
-        fontFamily: [
-            'Roboto',
-            '"Helvetica Neue"',
-            'Arial',
-            'sans-serif',
-        ].join(','),
-        fontWeight: 400,
-        lineHeight: '1.1876em',
-        letterSpacing: '0.00938em',
-    },
-});
-
 function HomeDashboard({AppStore, HomeStore}) {
     const {
         showVendors,
@@ -86,7 +65,6 @@ function HomeDashboard({AppStore, HomeStore}) {
         selection,
     } = HomeStore;
 
-    const classes = styles();
     useEffect(() => {
         handleFetch();
     }, []);

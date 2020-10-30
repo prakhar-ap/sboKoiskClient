@@ -2,48 +2,53 @@ import React, {Component} from "react";
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import TextField from "@material-ui/core/TextField";
+import KeyboardArrowUpRoundedIcon from '@material-ui/icons/KeyboardArrowUpRounded';
+import KeyboardArrowDownRoundedIcon from '@material-ui/icons/KeyboardArrowDownRounded';
 
 const styles = theme => ({
     root: {
-        color: 'rgba(0, 0, 0, 0.87)',
-        cursor: 'text',
-        display: 'inline-flex',
-        position: 'relative',
         fontSize: '0.7rem',
-        boxSizing: 'border-box',
-        alignItems: 'center',
-        fontFamily: [
-            'Roboto',
-            '"Helvetica Neue"',
-            'Arial',
-            'sans-serif',
-        ].join(','),
-        fontWeight: 400,
-        lineHeight: '1.1876em',
-        letterSpacing: '0.00938em',
     },
 });
 
 class AutoCompleteWrapper extends Component{
     constructor(props) {
         super(props);
+
+        this.state = {
+            isOpen: false
+        }
+
+        this.wrapperRef = React.createRef();
+        this.handleClickOutside = this.handleClickOutside.bind(this);
     }
 
-    autocomplete = (id, url) => {
+    _handleIsOpen = (e) => {
+        e.preventDefault();
+        this.setState({
+            isOpen: !this.state.isOpen,
+        });
+    }
+
+    autocomplete = async (id, url) => {
         let inp = document.getElementById(id);
         let currentFocus;
         let pageCount = 1;
+        let currentArray = [];
+        await fetchValues("", 1);
+        let isOpen = false;
+
         inp.addEventListener("input", async function (e) {
             currentFocus = -1;
             closeAllLists();
             pageCount = 1;
             localStorage.setItem(id, '');
             if (!this.value) {
-                const array = await fetchValues("", 1);
-                await displayList(inp, array, true);
+                await fetchValues("", 1);
+                await displayList(true);
             } else {
-                const array = await fetchValues(inp.value, "");
-                await displayList(inp, array, false);
+                await fetchValues(this.value, 1);
+                await displayList(false);
             }
         });
 
@@ -65,12 +70,12 @@ class AutoCompleteWrapper extends Component{
         });
 
         inp.addEventListener("click", async function (e) {
-            e.preventDefault();
-            closeAllLists();
-            pageCount = 1;
-            currentFocus = -1;
-            const array = await fetchValues(inp.value, 1);
-            await displayList(document.getElementById(id), array, true);
+            if(!isOpen) {
+                currentFocus = -1;
+                await displayList(false);
+            } else {
+                closeAllLists();
+            }
         });
 
         function addActive(x) {
@@ -94,10 +99,11 @@ class AutoCompleteWrapper extends Component{
                     x[i].parentNode.removeChild(x[i]);
                 }
             }
+            isOpen = false;
         }
 
-        async function displayList(inp, array, displayAll = false, scrollTop = 0) {
-            if (array) {
+        async function displayList(displayAll = false) {
+            if (currentArray) {
                 closeAllLists();
                 let val = inp.value;
                 let a = document.createElement("div");
@@ -105,36 +111,34 @@ class AutoCompleteWrapper extends Component{
                 a.setAttribute("class", "autocomplete-items");
                 a.setAttribute(
                     "style",
-                    "max-height: 300px;overflow-x: scroll;scroll-behavior: smooth;overflow: auto;border: 1px solid #d4d4d4");
-                a.scrollTop = scrollTop;
+                    "max-height: 300px;overflow-x: scroll;scroll-behavior: smooth;overflow: auto;border: 1px solid #d4d4d4;" +
+                    " border-radius: 4px; min-height: 1.1876em; white-space: nowrap; text-overflow: ellipsis;");
                 a.addEventListener("scroll", async function (e) {
                     if (this.scrollTop + this.offsetHeight >= this.scrollHeight) {
                         pageCount += 1;
-                        const nextPage = await fetchValues(
+                        await fetchValues(
                             document.getElementById(id).value,
                             pageCount
                         );
-                        if (nextPage) {
-                            array.push(...nextPage);
-                            await displayList(inp, array, displayAll, this.scrollTop);
-                        }
+                        await displayList(displayAll);
                     }
                 });
                 inp.parentNode.appendChild(a);
-                for (let i = 0; i < array.length; i++) {
-                    if (displayAll || (array[i].name.toUpperCase().includes(val.toUpperCase()))) {
-                        const selectedValue = array[i].id;
+                for (let i = 0; i < currentArray.length; i++) {
+                    if (displayAll || (currentArray[i].name.toUpperCase().includes(val.toUpperCase()))) {
+                        const selectedValue = currentArray[i].id;
                         let b = document.createElement("div");
-                        b.setAttribute("style","border: 0");
+                        b.setAttribute("style",
+                            "border: 0; cursor: pointer; display: flex; padding: 10px 6px 10px 10px;");
                         if (!displayAll) {
-                            const startIndex = array[i].name.toUpperCase().indexOf(val.toUpperCase());
-                            b.innerHTML = array[i].name.substr(0, startIndex);
-                            b.innerHTML += "<strong>" + array[i].name.substr(startIndex, val.length) + "</strong>";
-                            b.innerHTML += array[i].name.substr(startIndex + val.length, array[i].name.length);
+                            const startIndex = currentArray[i].name.toUpperCase().indexOf(val.toUpperCase());
+                            b.innerHTML = currentArray[i].name.substr(0, startIndex);
+                            b.innerHTML += "<strong>" + currentArray[i].name.substr(startIndex, val.length) + "</strong>";
+                            b.innerHTML += currentArray[i].name.substr(startIndex + val.length, currentArray[i].name.length);
                         } else {
-                            b.innerHTML += array[i].name;
+                            b.innerHTML += currentArray[i].name;
                         }
-                        b.innerHTML += "<input type='hidden' value='" + array[i].name + "'>";
+                        b.innerHTML += "<input type='hidden' value='" + currentArray[i].name + "'>";
                         b.addEventListener("click", function (e) {
                             inp.value = this.getElementsByTagName("input")[0].value;
                             localStorage.setItem(id, selectedValue);
@@ -142,10 +146,11 @@ class AutoCompleteWrapper extends Component{
                         a.appendChild(b);
                     }
                 }
+                isOpen = true;
             }
         }
-        
-        async function fetchValues(value = "", page) {
+
+        async function fetchValues(value = "", page = "") {
             try {
                 const URL = url + value + "&page=" + page;
                 let response = await axios.get(URL, {
@@ -158,24 +163,47 @@ class AutoCompleteWrapper extends Component{
                    res.id = res.label;
                    res.name = res.label;
                 });
-                return response;
+                if (page > 1)
+                    currentArray.push(...response);
+                else
+                    currentArray = response;
             } catch (e) {
-                return undefined;
+                currentArray = undefined;
             }
         }
         document.addEventListener("click", function(e) {
-           closeAllLists();
+            if(e.target.id !== id) {
+                closeAllLists();
+            }
         });
     }
 
-    componentDidMount() {
-        this.autocomplete(this.props.id, this.props.url);
+    async componentDidMount() {
+        await this.autocomplete(this.props.id, this.props.url);
+        document.addEventListener('mousedown', this.handleClickOutside);
+    }
+
+    componentWillUnmount() {
+        document.removeEventListener('mousedown', this.handleClickOutside);
+    }
+
+    handleClickOutside(event) {
+        if (this.wrapperRef && !this.wrapperRef.current.contains(event.target)) {
+            this.setState({
+                isOpen: false
+            });
+        }
     }
     
     render() {
         const classes = styles();
         return (
-            <div className="autocomplete">
+            <div ref={this.wrapperRef} className="autocomplete" style={{position: 'relative', display: 'inline-block'}}>
+                {this.state.isOpen ? (
+                    <KeyboardArrowUpRoundedIcon style={{color: '#ccc', position: 'absolute', right: 8, top: 7, width: 20, height: 20}}/>
+                    ) : (
+                        <KeyboardArrowDownRoundedIcon style={{color: '#ccc', position: 'absolute', right: 8, top: 7, width: 20, height: 20}}/>
+                    )}
                 <TextField
                     id={this.props.id}
                     type="text"
@@ -186,7 +214,8 @@ class AutoCompleteWrapper extends Component{
                         style: classes.root
                     }}
                     variant={"outlined"}
-                    fullWidth={true}/>
+                    fullWidth={true}
+                    onClick={this._handleIsOpen}/>
             </div>
         )
     }

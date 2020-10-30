@@ -9,9 +9,13 @@
   position: absolute;
   z-index: 99;
   /*position the autocomplete items to be the same width as the container:*/
-  top: 100%;
-  left: 0;
-  right: 0;
+  opacity: 1;
+  transform: none;
+  min-width: 100%;
+  transition: opacity 387ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, transform 258ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  top: 37px;
+  left: 0px;
+  transform-origin: 0 134.55px;
 }
 .autocomplete-items div {
   padding: 10px;
