@@ -11,6 +11,21 @@ const styles = theme => ({
     },
 });
 
+const light = theme => ({
+    root: {
+        fontSize: '0.7rem',
+        backgroundColor: 'white',
+    },
+});
+
+const dark = theme => ({
+    root: {
+        fontSize: '0.7rem',
+        backgroundColor: '#333',
+        color: 'whitesmoke',
+    },
+});
+
 class AutoCompleteWrapper extends Component{
     constructor(props) {
         super(props);
@@ -30,13 +45,15 @@ class AutoCompleteWrapper extends Component{
         });
     }
 
-    autocomplete = async (id, url) => {
+    autocomplete = async (id, url, inputArray = []) => {
         let inp = document.getElementById(id);
+        const rowsPerPage = 200;
         let currentFocus;
         let pageCount = 1;
         let currentArray = [];
         await fetchValues("", 1);
         let isOpen = false;
+        let isDark = false;
 
         inp.addEventListener("input", async function (e) {
             currentFocus = -1;
@@ -70,6 +87,7 @@ class AutoCompleteWrapper extends Component{
         });
 
         inp.addEventListener("click", async function (e) {
+            isDark = localStorage.getItem('preferredTheme') === 'true';
             if(!isOpen) {
                 currentFocus = -1;
                 await displayList(false);
@@ -108,11 +126,12 @@ class AutoCompleteWrapper extends Component{
                 let val = inp.value;
                 let a = document.createElement("div");
                 a.setAttribute("id", id + "autocomplete-list");
+                const a_theme = !isDark ? " background-color: white;" : " background-color: #333;";
                 a.setAttribute("class", "autocomplete-items");
                 a.setAttribute(
                     "style",
                     "max-height: 300px;overflow-x: scroll;scroll-behavior: smooth;overflow: auto;border: 1px solid #d4d4d4;" +
-                    " border-radius: 4px; min-height: 1.1876em; white-space: nowrap; text-overflow: ellipsis;");
+                    " border-radius: 4px; min-height: 1.1876em; white-space: nowrap; text-overflow: ellipsis;" + a_theme);
                 a.addEventListener("scroll", async function (e) {
                     if (this.scrollTop + this.offsetHeight >= this.scrollHeight) {
                         pageCount += 1;
@@ -128,8 +147,10 @@ class AutoCompleteWrapper extends Component{
                     if (displayAll || (currentArray[i].name.toUpperCase().includes(val.toUpperCase()))) {
                         const selectedValue = currentArray[i].id;
                         let b = document.createElement("div");
+                        const b_theme = !isDark ? " background-color: white; color: black;"
+                            : " background-color: #333; color: whitesmoke";
                         b.setAttribute("style",
-                            "border: 0; cursor: pointer; display: flex; padding: 10px 6px 10px 10px;");
+                            "border: 0; cursor: pointer; display: flex; padding: 10px 6px 10px 10px;" + b_theme);
                         if (!displayAll) {
                             const startIndex = currentArray[i].name.toUpperCase().indexOf(val.toUpperCase());
                             b.innerHTML = currentArray[i].name.substr(0, startIndex);
@@ -139,8 +160,9 @@ class AutoCompleteWrapper extends Component{
                             b.innerHTML += currentArray[i].name;
                         }
                         b.innerHTML += "<input type='hidden' value='" + currentArray[i].name + "'>";
-                        b.addEventListener("click", function (e) {
+                         b.addEventListener("click", function (e) {
                             inp.value = this.getElementsByTagName("input")[0].value;
+                            console.log('clicked and set ', inp.value);
                             localStorage.setItem(id, selectedValue);
                         });
                         a.appendChild(b);
@@ -150,25 +172,34 @@ class AutoCompleteWrapper extends Component{
             }
         }
 
-        async function fetchValues(value = "", page = "") {
-            try {
-                const URL = url + value + "&page=" + page;
-                let response = await axios.get(URL, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                response = response.data;
-                response.map(res => {
-                   res.id = res.label;
-                   res.name = res.label;
-                });
+        async function fetchValues(value = "", page) {
+            if (inputArray.length === 0) {
+                try {
+                    const URL = url + value + "&page=" + page;
+                    let response = await axios.get(URL, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    response = response.data;
+                    response.map(res => {
+                        res.id = res.label;
+                        res.name = res.label;
+                    });
+                    if (page > 1)
+                        currentArray.push(...response);
+                    else
+                        currentArray = response;
+                } catch (e) {
+                    currentArray = undefined;
+                }
+            } else {
+                const arr = inputArray.filter(arr => arr.name.toUpperCase().includes(value.toUpperCase()))
+                    .slice((page - 1) * rowsPerPage, (page - 1) * rowsPerPage + rowsPerPage);
                 if (page > 1)
-                    currentArray.push(...response);
+                    currentArray.push(...arr);
                 else
-                    currentArray = response;
-            } catch (e) {
-                currentArray = undefined;
+                    currentArray = arr;
             }
         }
         document.addEventListener("click", function(e) {
@@ -179,7 +210,7 @@ class AutoCompleteWrapper extends Component{
     }
 
     async componentDidMount() {
-        await this.autocomplete(this.props.id, this.props.url);
+        await this.autocomplete(this.props.id, this.props.url, this.props.inputArray, this.props.isDark);
         document.addEventListener('mousedown', this.handleClickOutside);
     }
 
@@ -196,11 +227,11 @@ class AutoCompleteWrapper extends Component{
     }
     
     render() {
-        const classes = styles();
+        const classes = !this.props.isDark ? light() : dark();
         return (
             <div ref={this.wrapperRef} className="autocomplete" style={{position: 'relative', display: 'inline-block'}}>
                 {this.state.isOpen ? (
-                    <KeyboardArrowUpRoundedIcon style={{color: '#ccc', position: 'absolute', right: 8, top: 7, width: 20, height: 20}}/>
+                    <KeyboardArrowUpRoundedIcon style={{color: '#333', position: 'absolute', right: 8, top: 7, width: 20, height: 20}}/>
                     ) : (
                         <KeyboardArrowDownRoundedIcon style={{color: '#ccc', position: 'absolute', right: 8, top: 7, width: 20, height: 20}}/>
                     )}
@@ -213,8 +244,10 @@ class AutoCompleteWrapper extends Component{
                     InputProps={{
                         style: classes.root
                     }}
+                    value={this.props.value}
                     variant={"outlined"}
                     fullWidth={true}
+                    onChange={this.props.onChange}
                     onClick={this._handleIsOpen}/>
             </div>
         )
@@ -225,7 +258,11 @@ AutoCompleteWrapper.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string,
     placeholder: PropTypes.string,
-    url: PropTypes.string.isRequired
+    url: PropTypes.string,
+    inputArray: PropTypes.array,
+    value: PropTypes.string,
+    onChange: PropTypes.func,
+    isDark: PropTypes.bool,
 }
 
 export default AutoCompleteWrapper;

@@ -3,46 +3,6 @@
   font-weight: 600;
   margin: 20px 20px 20px 0;
   font-size: 20px;
-  color: #32c5d2!important
-}
-
-.table {
-  text-align: center;
-  font-family: "SansSerif", Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  border: 3px solid #ddd;
-  width: 100%;
-  background-color: white;
-}
-
-.noData {
-  height: 100px;
-  align-items: center;
-  font-size: 15px;
-  font-weight: bolder;
-  margin: 50px 0 50px 50px;
-}
-
-.table td, .table th {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-  height: 100%;
-}
-
-.table tr:nth-child(even){background-color: whitesmoke;}
-
-.table>tbody>tr:hover {
-  border: 3px solid blue;
-  cursor: pointer;
-}
-
-.table th {
-  padding: 12px 0 12px 0;
-  text-align: center;
-  background-color: var(--ghost-white);
-  color: black;
-  font-size: 12px;
-  text-transform: uppercase;
-  font-weight: bold;
+  color: #32c5d2!important;
+  min-width: 750px;
 }

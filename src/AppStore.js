@@ -21,6 +21,8 @@ class AppStore {
     link = {};
     @observable
     pathname = '';
+    @observable
+    isDark = true;
 
     @action
     setUser(user) {
@@ -31,6 +33,11 @@ class AppStore {
     @action
     setPath(pathname) {
         this.pathname = pathname;
+    }
+
+    @action
+    setTheme = (isDark) => {
+        this.isDark = isDark;
     }
 
     @action

@@ -1,5 +1,5 @@
 import {inject, observer} from "mobx-react";
-import {Button, Grid} from "@material-ui/core";
+import {Button, Divider, Grid} from "@material-ui/core";
 import React, {useEffect} from "react";
 import PropTypes from 'prop-types';
 import TableWrapper from "../common/wrappers/TableWrapper";
@@ -10,6 +10,8 @@ import Paper from "@material-ui/core/Paper";
 import MenuItem from "@material-ui/core/MenuItem";
 import config from '../../config';
 import AutoCompleteWrapper from '../common/wrappers/AutoCompleteWrapper';
+import makeStyles from "@material-ui/core/styles/makeStyles";
+import FormWrapper from "../common/wrappers/FormWrapper";
 
 const {apiUrl} = config;
 const BootstrapButton = withStyles({
@@ -50,7 +52,39 @@ const BootstrapButton = withStyles({
     },
 })(Button);
 
+const light = makeStyles((theme) => ({
+    root: {
+        color: 'black',
+    },
+    menuItem: {
+        backgroundColor: 'white',
+        color: 'black',
+        '&:hover': {
+            background: 'grey'
+        },
+    },
+}));
+
+const dark = makeStyles((theme) => ({
+    root: {
+        color: 'whitesmoke',
+        backgroundColor: '#333',
+    },
+    menuItem: {
+        backgroundColor: '#3d3d3d',
+        color: 'black',
+        '&:hover': {
+            background: 'lightgrey'
+        },
+    },
+}));
+
 function HomeDashboard({AppStore, HomeStore}) {
+    const pincodeRef = React.createRef();
+    const subdistrictRef = React.createRef();
+    const allRef = React.createRef();
+    const filterRef = React.createRef();
+
     const {
         showVendors,
         handleGo,
@@ -58,16 +92,26 @@ function HomeDashboard({AppStore, HomeStore}) {
         handleFetch,
         handleChange,
         handleTableClick,
+        fetchCurrentIP,
+        getPincode,
+        displayPreviousState,
         states,
         banks,
         districts,
         form,
+        filter,
         selection,
     } = HomeStore;
 
     useEffect(() => {
         handleFetch();
+        if (localStorage.getItem('vendors')) {
+            displayPreviousState(true);
+        }
     }, []);
+
+    const classes = !AppStore.isDark ? light() : dark();
+    const section = !AppStore.isDark ? 'div_sec light_sec' : 'div_sec dark_sec';
 
     const keys = {
         id: 'id',
@@ -80,9 +124,19 @@ function HomeDashboard({AppStore, HomeStore}) {
         handleChange(event);
     }
 
-    const _handleGO = (event, section) => {
+    const handleCurrentPincode = async () => {
+        if(!form.currentPincode || form.currentPincode.length > 6) {
+            await fetchCurrentIP();
+            form.currentPincode = await getPincode();
+            localStorage.setItem('currentPin', form.currentPincode);
+        }
+    }
+    const _handleGO = async (event, section) => {
         event.preventDefault();
-        handleGo(section)
+        if(section === 4) {
+           await handleCurrentPincode();
+        }
+        handleGo(section);
     }
 
     const _handleRowClick = (row) => {
@@ -91,9 +145,9 @@ function HomeDashboard({AppStore, HomeStore}) {
 
     return (
         <div className="dashboard">
-            <Paper elevation={4}>
+            <Paper elevation={4} className={classes.root}>
                 <Grid container spacing={1} item xs={12} className="cardContainer">
-                    <Grid container spacing={1} item sm={6} lg={2} className="div_sec">
+                    <Grid container spacing={1} item sm={6} lg={2} className={section}>
                         <Grid item xs={12}>
                             <label htmlFor="example2">
                                 <span className="number_shape">1</span>
@@ -101,13 +155,20 @@ function HomeDashboard({AppStore, HomeStore}) {
                             </label>
                         </Grid>
                         <Grid item sm={8} lg={7} xs={8}>
-                            <TextFieldWrapper
-                                name={"pincode"}
-                                value={form.pincode}
-                                placeholder={'Enter Pincode'}
-                                type="text"
-                                variant="outlined"
-                                onChange={_handleChange}/>
+                            <FormWrapper
+                                className="form"
+                                formRef={pincodeRef}
+                                onSubmit={(e) => _handleGO(e, 1)}
+                                isValid>
+                                    <TextFieldWrapper
+                                        name={"pincode"}
+                                        value={form.pincode}
+                                        placeholder={'Enter Pincode'}
+                                        type="text"
+                                        variant="outlined"
+                                        isDark={AppStore.isDark}
+                                        onChange={_handleChange}/>
+                            </FormWrapper>
                         </Grid>
                         <Grid item sm={4}>
                             <BootstrapButton
@@ -119,7 +180,7 @@ function HomeDashboard({AppStore, HomeStore}) {
                             </BootstrapButton>
                         </Grid>
                     </Grid>
-                    <Grid container spacing={1} item sm={6} lg={3} className="div_sec">
+                    <Grid container spacing={1} item sm={6} lg={3} className={section}>
                         <Grid item xs={12}>
                             <label htmlFor="example1">
                                 <span className="number_shape">2</span>
@@ -127,12 +188,21 @@ function HomeDashboard({AppStore, HomeStore}) {
                             </label>
                         </Grid>
                         <Grid item sm={8} lg={8} xs={8}>
-                            <AutoCompleteWrapper
-                                placeholder={"Select Subdistrict name"}
-                                id={"subdistrict"}
-                                name={"mySubdistricts"}
-                                url={`${apiUrl}/subdistricts?searchTerm=`}
-                            />
+                            <FormWrapper
+                                className="form"
+                                formRef={subdistrictRef}
+                                onSubmit={(e) => _handleGO(e, 2)}
+                                isValid>
+                                    <AutoCompleteWrapper
+                                        placeholder={"Select Subdistrict name"}
+                                        id={"subdistrict"}
+                                        name={"subDistricts"}
+                                        url={`${apiUrl}/subdistricts?searchTerm=`}
+                                        isDark={AppStore.isDark}
+                                        value={form.subDistricts}
+                                        onChange={_handleChange}
+                                    />
+                            </FormWrapper>
                         </Grid>
                         <Grid item sm={1}>
                             <BootstrapButton
@@ -142,7 +212,7 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 disableRipple>Go</BootstrapButton>
                         </Grid>
                     </Grid>
-                    <Grid container spacing={1} item sm={6} lg={5} className="div_sec">
+                    <Grid container spacing={1} item sm={6} lg={5} className={section}>
                         <Grid item xs={12}>
                             <label htmlFor="example3">
                                 <span className="number_shape">3</span>
@@ -153,9 +223,13 @@ function HomeDashboard({AppStore, HomeStore}) {
                             <SelectWrapper
                                 name={"state"}
                                 value={form.state}
+                                isDark={AppStore.isDark}
+                                className={classes.select}
                                 onChange={_handleChange}>
                                 {states.map((state) => (
-                                    <MenuItem  key={state.id} value={state.name}>
+                                    <MenuItem
+                                        className={classes.menuItem}
+                                        key={state.id} value={state.name}>
                                         {state.name}
                                     </MenuItem>
                                 ))}
@@ -165,9 +239,12 @@ function HomeDashboard({AppStore, HomeStore}) {
                             <SelectWrapper
                                 name={"bank"}
                                 value={form.bank}
+                                isDark={AppStore.isDark}
                                 onChange={_handleChange}>
                                 {banks.map((bank) => (
-                                    <MenuItem  key={bank.id} value={bank.name}>
+                                    <MenuItem
+                                        className={classes.menuItem}
+                                        key={bank.id} value={bank.name}>
                                         {bank.name}
                                     </MenuItem>
                                 ))}
@@ -177,9 +254,12 @@ function HomeDashboard({AppStore, HomeStore}) {
                             <SelectWrapper
                                 name={"district"}
                                 value={form.district}
+                                isDark={AppStore.isDark}
                                 onChange={_handleChange}>
                                 {districts.map((district) => (
-                                    <MenuItem  key={district.id} value={district.name}>
+                                    <MenuItem
+                                        className={classes.menuItem}
+                                        key={district.id} value={district.name}>
                                         {district.name}
                                     </MenuItem>
                                 ))}
@@ -195,14 +275,11 @@ function HomeDashboard({AppStore, HomeStore}) {
                             </BootstrapButton>
                         </Grid>
                     </Grid>
-                    <Grid container spacing={1} item sm={6} lg={2} className="div_sec">
-                        <Grid item xs={12} className={'gps'}>
-                            <label htmlFor="example4">
-                                <span className="number_shape">4</span>
-                                <span className="search">GPS</span>
-                            </label>
-                        </Grid>
-                        <Grid item sm={6} lg={12}>
+                    <Grid container spacing={1} item sm={6} lg={2} className={section}>
+                        <span className="number_shape fourth">4</span>
+                        <span className="search">GPS</span>
+                        <br /><br />
+                        <div className="gps">
                             <BootstrapButton
                                 variant="contained"
                                 color="primary"
@@ -210,20 +287,88 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 disableRipple>
                                 Use my location
                             </BootstrapButton>
-                        </Grid>
+                        </div>
                     </Grid>
                 </Grid>
             </Paper>
             <br />
+            {showVendors && ( // filters
+                <Grid container spacing={2} item xs={12}>
+                    <Grid item xs={2} />
+                    <Grid item xs={3}>
+                        <AutoCompleteWrapper
+                            id={'filterByName'}
+                            name={"filterName"}
+                            inputArray={filter.name}
+                            isDark={AppStore.isDark}
+                            value={form.filterName}
+                            onChange={_handleChange}
+                        />
+                    </Grid>
+                    <Grid item xs={2}>
+                        <AutoCompleteWrapper
+                            id={'filterByMobile'}
+                            name={"filterMobile"}
+                            isDark={AppStore.isDark}
+                            inputArray={filter.mobile}
+                            value={form.filterMobile}
+                            onChange={_handleChange}
+                        />
+                    </Grid>
+                    <Grid item xs={2}>
+                        <SelectWrapper
+                            name={"filterPincode"}
+                            value={form.filterPincode}
+                            isDark={AppStore.isDark}
+                            onChange={_handleChange}>
+                            {filter.pincode.map((pc) => (
+                                <MenuItem
+                                    className={classes.menuItem}
+                                    key={pc.id} value={pc.name}>
+                                    {pc.name}
+                                </MenuItem>
+                            ))}
+                        </SelectWrapper>
+                    </Grid>
+                    <Grid item xs={3}>
+                        <SelectWrapper
+                            name={"filterBank"}
+                            value={form.filterBank}
+                            isDark={AppStore.isDark}
+                            onChange={_handleChange}>
+                            {filter.banks.map((bank) => (
+                                <MenuItem
+                                    className={classes.menuItem}
+                                    key={bank.id} value={bank.name}>
+                                    {bank.name}
+                                </MenuItem>
+                            ))}
+                        </SelectWrapper>
+                    </Grid>
+                    <Grid item xs={6} />
+                    <Grid item xs={3}>
+
+                    </Grid>
+                    <Grid item xs={3}>
+
+                    </Grid>
+                </Grid>
+            )}
             <Grid item sm={12} lg={7} xs={12} className={'vendors'}>
-                {showVendors &&
+                {showVendors === true ? (
                 <TableWrapper
                     rows={vendors}
                     headers={headers}
                     keys={keys}
                     onClick={_handleRowClick}
-                    selection={selection}/>
-                }
+                    selection={selection}
+                    theme={AppStore.isDark}/>
+                ) : (
+                    <Paper className={'hiddenVendors'} elevation={4}>
+                        <Grid item xs={12} className={'hidden'}></Grid>
+                        <Divider />
+                    </Paper>
+                )}
             </Grid>
         </div>
     )

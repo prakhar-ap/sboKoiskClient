@@ -3,11 +3,27 @@ import Tooltip from '@material-ui/core/Tooltip';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 
-const styles = theme => ({
+const light = theme => ({
     root: {
         fontSize: '0.7rem',
+        backgroundColor: 'white',
+        '& icon': {
+            backgroundColor: 'black',
+        }
     },
 });
+
+const dark = theme => ({
+    root: {
+        fontSize: '0.7rem',
+        backgroundColor: '#333',
+        color: 'whitesmoke',
+        '& icon': {
+            backgroundColor: 'whitesmoke',
+        },
+    },
+});
+
 
 class SelectWrapper extends Component {
     constructor(props) {
@@ -24,11 +40,12 @@ class SelectWrapper extends Component {
             this.props.children.length === 1
                 ? this.props.children[0].props.value
                 : this.props.value;
-        const classes = styles();
+        const classes = !this.props.isDark ? light() : dark();
         const textField = (
             <TextField
                 name={this.props.name}
                 value={value}
+                className={this.props.className}
                 error={!!this.state.errorText}
                 helperText={this.state.errorText}
                 onChange={this.props.onChange}
@@ -74,6 +91,8 @@ SelectWrapper.propTypes = {
     hideOptional: PropTypes.bool,
     tooltipText: PropTypes.string,
     tooltipPlacement: PropTypes.string,
+    isDark: PropTypes.bool,
+    className: PropTypes.string
 };
 
 export default SelectWrapper;

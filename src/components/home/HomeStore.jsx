@@ -2,7 +2,6 @@ import axios from 'axios';
 import {action, configure, observable, flow} from 'mobx';
 import {useStaticRendering} from 'mobx-react'
 import config from '../../config';
-import {throttle} from 'lodash';
 
 const {apiUrl} = config;
 const isServer = typeof window === 'undefined';
@@ -15,14 +14,19 @@ class HomeStore {
     @observable
     showVendors = false;
     @observable
-    vendors = [];
+    vendors = localStorage.getItem('vendors') ? JSON.parse(localStorage.getItem('vendors')) : [];
     @observable
     form = {
         pincode: '',
+        currentPincode: '',
         subDistricts: '',
         bank: '--All Bank--',
         state: '--Select State--',
-        district: '--Select District--'
+        district: '--Select District--',
+        filterName: '',
+        filterPincode: '',
+        filterMobile: '',
+        filterBank: '',
     }
     @observable
     states = [{
@@ -43,6 +47,23 @@ class HomeStore {
     subDistricts = [];
     @observable
     selection = '';
+    @observable
+    filter = {
+        name: [],
+        mobile: [],
+        pincode: new Set(),
+        banks: new Set(),
+    };
+
+    @action
+    displayPreviousState = (val) => {
+        this.showVendors = val;
+        const st = localStorage.getItem('selection');
+        if (st)
+            this.selection = st;
+        if (this.vendors)
+            this.segregateVendors();
+    }
 
     @action
     handleGo = (section) => {
@@ -50,18 +71,28 @@ class HomeStore {
         if(err.length > 0) {
             alert(err.join(' , '));
         } else {
-            if (section === 4) { // GPS location
-                if(window.navigator.geolocation) {
-                    window.navigator.geolocation.getCurrentPosition(function (position) {
-                        console.log('Latitude: ' , position.coords.latitude);
-                        console.log('Longitude: ' , position.coords.longitude);
-                    });
-                }
-            }
             this.fetchVendors(this.generateUrlParams(section));
             this.showVendors = true;
+            localStorage.setItem('selection', this.selection);
+
+            this.segregateVendors();
         }
     };
+
+    @action
+    segregateVendors = () => {
+        this.filter.pincode = new Set();
+        this.filter.banks = new Set();
+        this.vendors.map(vendor => {
+            this.filter.name.push(this.createData(vendor.name));
+            this.filter.mobile.push(this.createData(vendor.mobile));
+            this.filter.pincode.add(vendor.pincode);
+            this.filter.banks.add(vendor.bank);
+        });
+        this.filter.pincode = Array.from(this.filter.pincode).map(pc => this.createData(pc));
+        this.filter.banks = Array.from(this.filter.banks).map(bank => this.createData(bank));
+    };
+
     @action
     generateUrlParams = (section) => {
         let constructUrl = new URLSearchParams();
@@ -69,10 +100,14 @@ class HomeStore {
         const bank = this.banks.filter(k => k.name === this.form.bank);
         const district = this.districts.filter(k => k.name === this.form.district);
         const subdistrict = localStorage.getItem('subdistrict');
+        let currentPincode = localStorage.getItem('currentPin');
+        if(!currentPincode && this.form.currentPincode) {
+            localStorage.setItem('currentPin', this.form.currentPincode);
+            currentPincode = this.form.currentPincode;
+        }
 
         switch (section) {
             case 1:
-            case 4:
                 constructUrl.append('pincode', this.form.pincode);
                 this.selection = `Pincode:${this.form.pincode}`;
                 break;
@@ -86,12 +121,18 @@ class HomeStore {
                 constructUrl.append('districtId', district.length >= 1 ? district[0].id : -1);
                 this.selection = `State,District,Bank: ${this.form.state},${this.form.district.replaceAll('-', '')},${this.form.bank.replaceAll('-', '')}`;
                 break;
+            case 4:
+                constructUrl.append('pincode', currentPincode);
+                this.selection = `Pincode:${currentPincode}`;
+                break;
         }
         return constructUrl;
     }
+
     @action
     handleChange = (event) => {
         this.form[event.target.name] = event.target.value;
+        console.log('event: ', event.target.name, event.target.value);
         if(event.target.name === 'state') {
             this.handleStateSelection();
         }
@@ -124,6 +165,8 @@ class HomeStore {
             this.banks.push(...yield this.getData('banks'));
             this.states.push(...yield this.getData('states'));
             localStorage.setItem('subdistrict', '');
+            const val  = localStorage.getItem('currentPin');
+            this.form.currentPincode =  val ? val : '';
         }.bind(this),
     );
 
@@ -133,6 +176,7 @@ class HomeStore {
             try {
                 const temp = yield this.getData(`vendor?${params}`);
                 this.vendors = this.formatVendorList(temp);
+                localStorage.setItem('vendors', JSON.stringify(this.vendors));
             } catch (e) {
                 this.vendors = [];
             }
@@ -182,6 +226,55 @@ class HomeStore {
         }.bind(this),
     );
 
+    @action
+    fetchCurrentIP = flow(
+        function* () {
+            if(navigator.geolocation) {
+                yield navigator.geolocation.getCurrentPosition(function (position) {
+                    localStorage.setItem('currLat', position.coords.latitude);
+                    localStorage.setItem('currLong', position.coords.longitude);
+                }, null, {timeout: 10000});
+            }
+        }.bind(this),
+    );
+
+    @action
+    getPincode = flow(
+        function* () {
+            const lat = localStorage.getItem('currLat');
+            const long = localStorage.getItem('currLong');
+            console.log(lat, long);
+            if(lat && long) {
+                const res = yield axios.get(`https://geocode.xyz/${lat},${long}?json=1`);
+                console.log('res: ', JSON.stringify(res.data));
+                return this.extractPincode(res.data);
+            } else {
+                alert('Please allow Current Location!!');
+            }
+        }.bind(this),
+    );
+
+    extractPincode(data) {
+        if(data.postal) {
+            return data.postal;
+        }
+        if(data.alt.loc) {
+            if (Array.isArray(data.alt.loc)) {
+                data.alt.loc.forEach(l => {
+                    if(l.postal) {
+                        return l.postal;
+                    }
+                })
+            } else if (data.alt.loc.postal) {
+                return data.alt.loc.postal;
+            }
+        }
+        if(data.poi && data.poi.addr_postcode) {
+            return data.poi.addr_postcode;
+        }
+        return '';
+    }
+
     validation = (section) => {
         let err = [];
         switch (section) {
@@ -191,7 +284,7 @@ class HomeStore {
                 }
                 break;
             case 2:
-                if(!localStorage.getItem('subdistrict')) {
+                if(!this.form.subDistricts) {
                     err.push('Sub district cannot be empty');
                 }
                 break;
@@ -205,6 +298,13 @@ class HomeStore {
                 break;
         }
         return err;
+    }
+
+    createData = val => {
+        return {
+            id: val,
+            name: val
+        }
     }
 }
 

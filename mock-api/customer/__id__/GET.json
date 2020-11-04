@@ -1,0 +1,23 @@
+{
+  "name": "Prakhar Khandelwal",
+  "bcDetailId": "1578894",
+  "days": "Mon-Sat",
+  "endTime": "5pm",
+  "startTime": "10am",
+  "gender": "Male",
+  "mobile": "9875070610",
+  "pincode": "302004",
+  "district": {
+    "id" : "1",
+    "name": "Jaipur"
+  },
+  "bank": {
+    "id" : "1",
+    "name": "Bank of Baroda"
+  },
+  "state": {
+    "id" : "1",
+    "name": "Rajasthan"
+  },
+  "subDistrict": "Jaipur"
+}

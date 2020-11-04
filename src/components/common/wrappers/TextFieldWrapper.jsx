@@ -2,9 +2,18 @@ import React, {Component} from 'react';
 import { TextField } from '@material-ui/core';
 import PropTypes from 'prop-types';
 
-const styles = theme => ({
+const light = theme => ({
     root: {
         fontSize: '0.7rem',
+        backgroundColor: 'white',
+    },
+});
+
+const dark = theme => ({
+    root: {
+        fontSize: '0.7rem',
+        backgroundColor: '#333',
+        color: 'whitesmoke',
     },
 });
 
@@ -19,7 +28,7 @@ class TextFieldWrapper extends Component {
 
     render() {
         const {label} = this.props;
-        const classes = styles();
+        const classes = !this.props.isDark ? light() : dark();
 
         const textField = (
             <TextField
@@ -77,6 +86,7 @@ TextFieldWrapper.propTypes = {
     multiline: PropTypes.bool,
     rows: PropTypes.number,
     autoComplete: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+    isDark: PropTypes.bool,
 };
 
 export default TextFieldWrapper;

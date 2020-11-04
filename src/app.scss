@@ -24,6 +24,10 @@ a {
   background-color: #0f1117;
 }
 
+form {
+  margin-block-end: 0;
+}
+
 @media (max-width: 600px) {
   .body {
     width: 100%;
