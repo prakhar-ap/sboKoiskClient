@@ -49,6 +49,10 @@ const BootstrapButton = withStyles({
         '&:focus': {
             boxShadow: '0 0 0 0.2rem rgba(0,123,255,.5)',
         },
+        '&:disabled':{
+            backgroundColor: '#51abe8',
+            color: 'whitesmoke'
+        }
     },
 })(Button);
 
@@ -63,6 +67,9 @@ const light = makeStyles((theme) => ({
             background: 'grey'
         },
     },
+    autocomplete: {
+        fontSize: '0.7em',
+    },
 }));
 
 const dark = makeStyles((theme) => ({
@@ -71,27 +78,36 @@ const dark = makeStyles((theme) => ({
         backgroundColor: '#333',
     },
     menuItem: {
-        backgroundColor: '#3d3d3d',
+        backgroundColor: '#707070',
         color: 'black',
         '&:hover': {
-            background: 'lightgrey'
+            background: 'darkgrey',
+            color: 'whitesmoke'
         },
+        '.Mui-select': {
+            color: 'black',
+            backgroundColor: 'white',
+        }
+    },
+    autocomplete: {
+        fontSize: '0.7em',
     },
 }));
 
 function HomeDashboard({AppStore, HomeStore}) {
     const pincodeRef = React.createRef();
     const subdistrictRef = React.createRef();
-    const allRef = React.createRef();
     const filterRef = React.createRef();
 
     const {
         showVendors,
         handleGo,
-        vendors,
         handleFetch,
         handleChange,
         handleTableClick,
+        handleFilter,
+        TableWrapperStore,
+        handleClear,
         fetchCurrentIP,
         getPincode,
         displayPreviousState,
@@ -100,6 +116,7 @@ function HomeDashboard({AppStore, HomeStore}) {
         districts,
         form,
         filter,
+        isFilterFilled,
         selection,
     } = HomeStore;
 
@@ -143,9 +160,19 @@ function HomeDashboard({AppStore, HomeStore}) {
         handleTableClick(row, AppStore);
     }
 
+    const _handleFilter = (e) => {
+        e.preventDefault();
+        handleFilter();
+    }
+
+    const _handleClear = (e) => {
+        e.preventDefault();
+        handleClear();
+    }
+
     return (
         <div className="dashboard">
-            <Paper elevation={4} className={classes.root}>
+            <Paper elevation={10} className={classes.root}>
                 <Grid container spacing={1} item xs={12} className="cardContainer">
                     <Grid container spacing={1} item sm={6} lg={2} className={section}>
                         <Grid item xs={12}>
@@ -195,7 +222,7 @@ function HomeDashboard({AppStore, HomeStore}) {
                                 isValid>
                                     <AutoCompleteWrapper
                                         placeholder={"Select Subdistrict name"}
-                                        id={"subdistrict"}
+                                        id={"subDistricts"}
                                         name={"subDistricts"}
                                         url={`${apiUrl}/subdistricts?searchTerm=`}
                                         isDark={AppStore.isDark}
@@ -293,11 +320,11 @@ function HomeDashboard({AppStore, HomeStore}) {
             </Paper>
             <br />
             {showVendors && ( // filters
-                <Grid container spacing={2} item xs={12}>
+                <Grid container spacing={2} item xs={12} className={'filters'}>
                     <Grid item xs={2} />
                     <Grid item xs={3}>
                         <AutoCompleteWrapper
-                            id={'filterByName'}
+                            id={'filterName'}
                             name={"filterName"}
                             inputArray={filter.name}
                             isDark={AppStore.isDark}
@@ -307,7 +334,7 @@ function HomeDashboard({AppStore, HomeStore}) {
                     </Grid>
                     <Grid item xs={2}>
                         <AutoCompleteWrapper
-                            id={'filterByMobile'}
+                            id={'filterMobile'}
                             name={"filterMobile"}
                             isDark={AppStore.isDark}
                             inputArray={filter.mobile}
@@ -345,19 +372,35 @@ function HomeDashboard({AppStore, HomeStore}) {
                             ))}
                         </SelectWrapper>
                     </Grid>
-                    <Grid item xs={6} />
-                    <Grid item xs={3}>
-
-                    </Grid>
-                    <Grid item xs={3}>
-
+                    <Grid item xs={9} />
+                    <Grid container spacing={2} justify="space-between" item xs={3}>
+                        <Grid item lg={6} sm={6}>
+                            <BootstrapButton
+                                variant="contained"
+                                color="primary"
+                                onClick={_handleFilter}
+                                disabled={!isFilterFilled}>
+                                Filter
+                            </BootstrapButton>
+                        </Grid>
+                        <Grid item lg={6} sm={6}>
+                            <Grid item xs={6}>
+                                <BootstrapButton
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={_handleClear}
+                                    disabled={!isFilterFilled}>
+                                    Clear
+                                </BootstrapButton>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
             )}
             <Grid item sm={12} lg={7} xs={12} className={'vendors'}>
                 {showVendors === true ? (
                 <TableWrapper
-                    rows={vendors}
+                    TableWrapperStore={TableWrapperStore}
                     headers={headers}
                     keys={keys}
                     onClick={_handleRowClick}

@@ -5,16 +5,18 @@ import TextField from "@material-ui/core/TextField";
 import KeyboardArrowUpRoundedIcon from '@material-ui/icons/KeyboardArrowUpRounded';
 import KeyboardArrowDownRoundedIcon from '@material-ui/icons/KeyboardArrowDownRounded';
 
-const styles = theme => ({
-    root: {
-        fontSize: '0.7rem',
-    },
-});
-
 const light = theme => ({
     root: {
         fontSize: '0.7rem',
         backgroundColor: 'white',
+    },
+    icon: {
+        color: '#333',
+        position: 'absolute',
+        right: 5,
+        top: 7,
+        width: 20,
+        height: 20,
     },
 });
 
@@ -24,6 +26,14 @@ const dark = theme => ({
         backgroundColor: '#333',
         color: 'whitesmoke',
     },
+    icon: {
+        color: 'whitesmoke',
+        position: 'absolute',
+        right: 5,
+        top: 7,
+        width: 20,
+        height: 20,
+    },
 });
 
 class AutoCompleteWrapper extends Component{
@@ -31,7 +41,7 @@ class AutoCompleteWrapper extends Component{
         super(props);
 
         this.state = {
-            isOpen: false
+            isOpen: false,
         }
 
         this.wrapperRef = React.createRef();
@@ -51,22 +61,16 @@ class AutoCompleteWrapper extends Component{
         let currentFocus;
         let pageCount = 1;
         let currentArray = [];
-        await fetchValues("", 1);
         let isOpen = false;
         let isDark = false;
+        await fetchValues("", 1);
 
         inp.addEventListener("input", async function (e) {
             currentFocus = -1;
             closeAllLists();
-            pageCount = 1;
             localStorage.setItem(id, '');
-            if (!this.value) {
-                await fetchValues("", 1);
-                await displayList(true);
-            } else {
-                await fetchValues(this.value, 1);
-                await displayList(false);
-            }
+            await fetchValues(this.value, 1);
+            await displayList(false);
         });
 
         inp.addEventListener("keydown", function (e) {
@@ -90,6 +94,7 @@ class AutoCompleteWrapper extends Component{
             isDark = localStorage.getItem('preferredTheme') === 'true';
             if(!isOpen) {
                 currentFocus = -1;
+                await fetchValues(inp.value, 1);
                 await displayList(false);
             } else {
                 closeAllLists();
@@ -162,7 +167,6 @@ class AutoCompleteWrapper extends Component{
                         b.innerHTML += "<input type='hidden' value='" + currentArray[i].name + "'>";
                          b.addEventListener("click", function (e) {
                             inp.value = this.getElementsByTagName("input")[0].value;
-                            console.log('clicked and set ', inp.value);
                             localStorage.setItem(id, selectedValue);
                         });
                         a.appendChild(b);
@@ -228,13 +232,15 @@ class AutoCompleteWrapper extends Component{
     
     render() {
         const classes = !this.props.isDark ? light() : dark();
+        let arrowIcon = null;
+        if(this.state.isOpen) {
+            arrowIcon = <KeyboardArrowUpRoundedIcon style={classes.icon} />;
+        } else {
+            arrowIcon = <KeyboardArrowDownRoundedIcon style={classes.icon} />;
+        }
+
         return (
             <div ref={this.wrapperRef} className="autocomplete" style={{position: 'relative', display: 'inline-block'}}>
-                {this.state.isOpen ? (
-                    <KeyboardArrowUpRoundedIcon style={{color: '#333', position: 'absolute', right: 8, top: 7, width: 20, height: 20}}/>
-                    ) : (
-                        <KeyboardArrowDownRoundedIcon style={{color: '#ccc', position: 'absolute', right: 8, top: 7, width: 20, height: 20}}/>
-                    )}
                 <TextField
                     id={this.props.id}
                     type="text"
@@ -242,9 +248,9 @@ class AutoCompleteWrapper extends Component{
                     placeholder={this.props.placeholder}
                     size={"small"}
                     InputProps={{
-                        style: classes.root
+                        style: classes.root,
+                        endAdornment: arrowIcon
                     }}
-                    value={this.props.value}
                     variant={"outlined"}
                     fullWidth={true}
                     onChange={this.props.onChange}

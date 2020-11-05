@@ -9,6 +9,7 @@ import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import TablePagination from "@material-ui/core/TablePagination";
+import {inject, observer} from "mobx-react";
 
 const lightTheme = makeStyles((theme) => ({
     root: {
@@ -90,8 +91,8 @@ const darkTheme = makeStyles((theme) => ({
     }
 }));
 
-function TableWrapper(props) {
-    const {rows, headers, keys, onClick, selection, theme} = props;
+function TableWrapper({ headers, keys, onClick, selection, theme, TableWrapperStore }) {
+    const { data } = TableWrapperStore;
     const classes = !theme ? lightTheme() : darkTheme();
 
     const [page, setPage] = React.useState(0);
@@ -109,14 +110,14 @@ function TableWrapper(props) {
     return (
         <div className={classes.root}>
             <div className={'summary'}>
-                {rows.length} result(s) found for {selection}
+                {data.length} result(s) found for {selection}
             </div>
-            {!rows?.length ? (
-                <Paper className={classes.emptyList}>
+            {!data?.length ? (
+                <Paper className={classes.emptyList} elevation={15}>
                     <div>No data to display!</div>
                 </Paper>
                 ) : (
-                <Paper className={classes.paper} elevation={8}>
+                <Paper className={classes.paper} elevation={15}>
                     <Table className={classes.table} aria-label="simple table">
                         <TableHead>
                             <TableRow aria-disabled={true}>
@@ -130,7 +131,7 @@ function TableWrapper(props) {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {rows
+                            {data
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row) => (
                                 <TableRow key={row[keys.id]} className={"cell"} onClick={() => onClick(row)}>
@@ -154,7 +155,7 @@ function TableWrapper(props) {
                     <TablePagination
                         rowsPerPageOptions={[10, 20, 50]}
                         component="div"
-                        count={rows.length}
+                        count={data.length}
                         rowsPerPage={rowsPerPage}
                         page={page}
                         onChangePage={handleChangePage}
@@ -168,7 +169,7 @@ function TableWrapper(props) {
 }
 
 TableWrapper.propTypes = {
-    rows: PropTypes.array.isRequired,
+    TableWrapperStore: PropTypes.object.isRequired,
     headers: PropTypes.array.isRequired,
     keys: PropTypes.object,
     title: PropTypes.string,
@@ -177,4 +178,4 @@ TableWrapper.propTypes = {
     theme: PropTypes.bool,
 };
 
-export default TableWrapper;
+export default inject('TableWrapperStore')(observer(TableWrapper));

@@ -2,6 +2,7 @@ import axios from 'axios';
 import {action, configure, observable, flow} from 'mobx';
 import {useStaticRendering} from 'mobx-react'
 import config from '../../config';
+import TableWrapperStore from "../common/wrappers/TableWrapperStore";
 
 const {apiUrl} = config;
 const isServer = typeof window === 'undefined';
@@ -14,7 +15,7 @@ class HomeStore {
     @observable
     showVendors = false;
     @observable
-    vendors = localStorage.getItem('vendors') ? JSON.parse(localStorage.getItem('vendors')) : [];
+    vendors = localStorage.getItem('vendors') ? this.getInitialVendors() : [];
     @observable
     form = {
         pincode: '',
@@ -24,9 +25,9 @@ class HomeStore {
         state: '--Select State--',
         district: '--Select District--',
         filterName: '',
-        filterPincode: '',
+        filterPincode: 'All',
         filterMobile: '',
-        filterBank: '',
+        filterBank: 'All',
     }
     @observable
     states = [{
@@ -54,6 +55,7 @@ class HomeStore {
         pincode: new Set(),
         banks: new Set(),
     };
+    TableWrapperStore = new TableWrapperStore();
 
     @action
     displayPreviousState = (val) => {
@@ -61,8 +63,10 @@ class HomeStore {
         const st = localStorage.getItem('selection');
         if (st)
             this.selection = st;
-        if (this.vendors)
+        if (this.vendors) {
+            this.TableWrapperStore.setData(this.vendors);
             this.segregateVendors();
+        }
     }
 
     @action
@@ -83,12 +87,17 @@ class HomeStore {
     segregateVendors = () => {
         this.filter.pincode = new Set();
         this.filter.banks = new Set();
+
+        this.filter.pincode.add('All');
+        this.filter.banks.add('All');
+
         this.vendors.map(vendor => {
             this.filter.name.push(this.createData(vendor.name));
             this.filter.mobile.push(this.createData(vendor.mobile));
             this.filter.pincode.add(vendor.pincode);
             this.filter.banks.add(vendor.bank);
         });
+
         this.filter.pincode = Array.from(this.filter.pincode).map(pc => this.createData(pc));
         this.filter.banks = Array.from(this.filter.banks).map(bank => this.createData(bank));
     };
@@ -99,8 +108,8 @@ class HomeStore {
         const state = this.states.filter(k => k.name === this.form.state);
         const bank = this.banks.filter(k => k.name === this.form.bank);
         const district = this.districts.filter(k => k.name === this.form.district);
-        const subdistrict = localStorage.getItem('subdistrict');
         let currentPincode = localStorage.getItem('currentPin');
+
         if(!currentPincode && this.form.currentPincode) {
             localStorage.setItem('currentPin', this.form.currentPincode);
             currentPincode = this.form.currentPincode;
@@ -112,8 +121,8 @@ class HomeStore {
                 this.selection = `Pincode:${this.form.pincode}`;
                 break;
             case 2:
-                constructUrl.append('subDistrict', subdistrict);
-                this.selection = `Subdistrict:${subdistrict}`;
+                constructUrl.append('subDistrict', this.form.subDistricts);
+                this.selection = `Subdistrict:${this.form.subDistricts}`;
                 break;
             case 3:
                 constructUrl.append('stateId', state.length >= 1 ? state[0].id : -1);
@@ -139,22 +148,6 @@ class HomeStore {
     }
 
     @action
-    updateSelectedSubdistricts = (selectedSubDistrict) => {
-        this.form.subDistricts = selectedSubDistrict;
-    };
-
-    @action
-    formatVendorList = (list) => {
-        let i = 1;
-        list.map(n => {
-           n.id = i++;
-           n.bank = n.bank ? n.bank.name : '';
-           n.name = n.name.replace('+', '');
-        });
-        return list;
-    }
-
-    @action
     handleTableClick = async (row, AppStore) => {
         AppStore.redirect(null, `/home/${row.detailId}`);
     }
@@ -177,6 +170,7 @@ class HomeStore {
                 const temp = yield this.getData(`vendor?${params}`);
                 this.vendors = this.formatVendorList(temp);
                 localStorage.setItem('vendors', JSON.stringify(this.vendors));
+                this.TableWrapperStore.setData(this.vendors);
             } catch (e) {
                 this.vendors = [];
             }
@@ -198,22 +192,6 @@ class HomeStore {
                 this.form.district = msg2;
                 const state = this.states.filter(k => k.name === this.form.state);
                 this.districts.push(...yield this.getData(`districts?stateId=${state[0].id}`));
-            }
-        }.bind(this),
-    );
-
-    @action
-    handleAutoComplete = flow(
-        function* (event, value) {
-            try {
-                if (!value) {
-                    this.updateSelectedSubdistricts('');
-                } else {
-                    this.updateSelectedSubdistricts(value);
-                    this.subDistricts = yield this.getData(`subdistricts?searchTerm=${value}`);
-                }
-            } catch (e) {
-                this.subDistricts = [];
             }
         }.bind(this),
     );
@@ -254,28 +232,39 @@ class HomeStore {
         }.bind(this),
     );
 
-    extractPincode(data) {
-        if(data.postal) {
-            return data.postal;
-        }
-        if(data.alt.loc) {
-            if (Array.isArray(data.alt.loc)) {
-                data.alt.loc.forEach(l => {
-                    if(l.postal) {
-                        return l.postal;
-                    }
-                })
-            } else if (data.alt.loc.postal) {
-                return data.alt.loc.postal;
-            }
-        }
-        if(data.poi && data.poi.addr_postcode) {
-            return data.poi.addr_postcode;
-        }
-        return '';
+    get isFilterFilled() {
+        return !!this.form.filterMobile
+            || !!this.form.filterName
+            || this.form.filterBank !== 'All'
+            || this.form.filterPincode !== 'All';
     }
 
+    @action
+    handleFilter = () => {
+        this.TableWrapperStore.setData(
+            this.formatVendorList(
+                this.vendors.filter(ven => ven.bank === this.form.filterBank)
+            )
+        );
+    }
+
+    @action
+    handleClear = () => {
+        this.TableWrapperStore.setData(this.formatVendorList(this.vendors));
+        // clear filter values
+        this.form.filterBank = 'All';
+        this.form.filterName = '';
+        this.form.filterPincode = 'All';
+        this.form.filterMobile = '';
+    }
+
+    getInitialVendors = () => {
+        return JSON.parse(localStorage.getItem('vendors'));
+    }
+
+
     validation = (section) => {
+        this.form.subDistricts = localStorage.getItem('subDistricts');
         let err = [];
         switch (section) {
             case 1:
@@ -306,6 +295,38 @@ class HomeStore {
             name: val
         }
     }
+
+    extractPincode(data) {
+        if(data.postal) {
+            return data.postal;
+        }
+        if(data.alt.loc) {
+            if (Array.isArray(data.alt.loc)) {
+                data.alt.loc.forEach(l => {
+                    if(l.postal) {
+                        return l.postal;
+                    }
+                })
+            } else if (data.alt.loc.postal) {
+                return data.alt.loc.postal;
+            }
+        }
+        if(data.poi && data.poi.addr_postcode) {
+            return data.poi.addr_postcode;
+        }
+        return '';
+    }
+
+    formatVendorList = (list) => {
+        let i = 1;
+        list.map(n => {
+            n.id = i++;
+            n.bank = n.bank ? n.bank.name ? n.bank.name : n.bank : '';
+            n.name = n.name.replace('+', '');
+        });
+        return list;
+    }
+
 }
 
 export default HomeStore;

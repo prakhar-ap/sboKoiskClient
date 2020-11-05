@@ -16,6 +16,12 @@
 .dark {
   color: white;
   background-color: var(--dark-theme);
+
+  .Mui-selected {
+    color: black;
+    background-color: white;
+  }
+
 }
 
 .light {
