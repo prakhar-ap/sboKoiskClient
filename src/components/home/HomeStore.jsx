@@ -26,7 +26,6 @@ class HomeStore {
         district: '--Select District--',
         filterName: '',
         filterPincode: 'All',
-        filterMobile: '',
         filterBank: 'All',
     }
     @observable
@@ -51,7 +50,6 @@ class HomeStore {
     @observable
     filter = {
         name: [],
-        mobile: [],
         pincode: new Set(),
         banks: new Set(),
     };
@@ -93,7 +91,6 @@ class HomeStore {
 
         this.vendors.map(vendor => {
             this.filter.name.push(this.createData(vendor.name));
-            this.filter.mobile.push(this.createData(vendor.mobile));
             this.filter.pincode.add(vendor.pincode);
             this.filter.banks.add(vendor.bank);
         });
@@ -233,14 +230,18 @@ class HomeStore {
     );
 
     get isFilterFilled() {
-        return !!this.form.filterMobile
-            || !!this.form.filterName
+        return !!this.form.filterName
             || this.form.filterBank !== 'All'
             || this.form.filterPincode !== 'All';
     }
 
     @action
     handleFilter = () => {
+        this.form.filterName = localStorage.getItem('filterName') ?
+            localStorage.getItem('filterName') : this.form.filterName;
+
+        console.log('this.f: ', this.form.filterName);
+
         this.TableWrapperStore.setData(
             this.formatVendorList(
                 this.vendors.filter(ven => ven.bank === this.form.filterBank)
@@ -255,7 +256,6 @@ class HomeStore {
         this.form.filterBank = 'All';
         this.form.filterName = '';
         this.form.filterPincode = 'All';
-        this.form.filterMobile = '';
     }
 
     getInitialVendors = () => {
@@ -264,7 +264,10 @@ class HomeStore {
 
 
     validation = (section) => {
-        this.form.subDistricts = localStorage.getItem('subDistricts');
+        this.form.subDistricts = localStorage.getItem('subDistricts')
+            ? localStorage.getItem('subDistricts')
+            : this.form.subDistricts;
+
         let err = [];
         switch (section) {
             case 1:

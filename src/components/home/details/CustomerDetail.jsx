@@ -41,6 +41,7 @@ const dark = makeStyles((theme) => ({
     root: {
         color: 'whitesmoke',
         backgroundColor: '#333',
+        boxShadow: '0px 3px 1px -4px whitesmoke, 0px 2px 5px 0px whitesmoke, 0px 1px 20px 0px whitesmoke',
     },
     emptyList: {
         color: 'whitesmoke',

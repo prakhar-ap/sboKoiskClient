@@ -9,6 +9,7 @@ const light = theme => ({
     root: {
         fontSize: '0.7rem',
         backgroundColor: 'white',
+        boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)'
     },
     icon: {
         color: '#333',
@@ -25,6 +26,7 @@ const dark = theme => ({
         fontSize: '0.7rem',
         backgroundColor: '#333',
         color: 'whitesmoke',
+        boxShadow: '0px 1px 5px 0px #FFFFFF'
     },
     icon: {
         color: 'whitesmoke',
@@ -52,6 +54,15 @@ class AutoCompleteWrapper extends Component{
         e.preventDefault();
         this.setState({
             isOpen: !this.state.isOpen,
+        });
+    }
+
+    _handleOnChange = () => {
+        this.props.onChange({
+            target: {
+                name: this.props.id,
+                value: localStorage.getItem(this.props.id)
+            }
         });
     }
 
@@ -214,7 +225,7 @@ class AutoCompleteWrapper extends Component{
     }
 
     async componentDidMount() {
-        await this.autocomplete(this.props.id, this.props.url, this.props.inputArray, this.props.isDark);
+        await this.autocomplete(this.props.id, this.props.url, this.props.inputArray, this.props.isDark, this._handleOnChange);
         document.addEventListener('mousedown', this.handleClickOutside);
     }
 
@@ -229,9 +240,10 @@ class AutoCompleteWrapper extends Component{
             });
         }
     }
-    
+
     render() {
         const classes = !this.props.isDark ? light() : dark();
+        const { label } = this.props;
         let arrowIcon = null;
         if(this.state.isOpen) {
             arrowIcon = <KeyboardArrowUpRoundedIcon style={classes.icon} />;
@@ -239,24 +251,35 @@ class AutoCompleteWrapper extends Component{
             arrowIcon = <KeyboardArrowDownRoundedIcon style={classes.icon} />;
         }
 
-        return (
-            <div ref={this.wrapperRef} className="autocomplete" style={{position: 'relative', display: 'inline-block'}}>
-                <TextField
-                    id={this.props.id}
-                    type="text"
-                    name={this.props.name}
-                    placeholder={this.props.placeholder}
-                    size={"small"}
-                    InputProps={{
-                        style: classes.root,
-                        endAdornment: arrowIcon
-                    }}
-                    variant={"outlined"}
-                    fullWidth={true}
-                    onChange={this.props.onChange}
-                    onClick={this._handleIsOpen}/>
-            </div>
-        )
+        const autoCompleteField = (
+                <div ref={this.wrapperRef} className="autocomplete" style={{position: 'relative', display: 'inline-block'}}>
+                    <TextField
+                        id={this.props.id}
+                        type="text"
+                        name={this.props.name}
+                        placeholder={this.props.placeholder}
+                        size={"small"}
+                        InputProps={{
+                            style: classes.root,
+                            endAdornment: arrowIcon
+                        }}
+                        variant={"outlined"}
+                        fullWidth={true}
+                        onChange={this.props.onChange}
+                        onClick={this._handleIsOpen}/>
+                </div>
+            )
+
+        if(label) {
+            return (
+                <div>
+                    <div className="label">{label}</div>
+                    {autoCompleteField}
+                </div>
+            )
+        }
+
+        return autoCompleteField;
     }
 }
 
@@ -269,6 +292,7 @@ AutoCompleteWrapper.propTypes = {
     value: PropTypes.string,
     onChange: PropTypes.func,
     isDark: PropTypes.bool,
+    label: PropTypes.string,
 }
 
 export default AutoCompleteWrapper;

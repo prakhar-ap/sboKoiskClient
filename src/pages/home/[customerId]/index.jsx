@@ -32,7 +32,7 @@ class Details extends Base {
     render() {
         return (
             <Provider CustomerDetailsStore={this.state.Store}>
-                <Layout>
+                <Layout hideBar>
                     <CustomerDetail/>
                 </Layout>
             </Provider>

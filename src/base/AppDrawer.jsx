@@ -6,6 +6,7 @@ import Home from '../pages/home';
 import Intro from '../pages/intro';
 import Details from '../pages/home/[customerId]';
 import NotFoundPage from '../pages/notfound';
+import Signup from "../pages/signup";
 
 class AppDrawer extends Component {
     render() {
@@ -13,6 +14,7 @@ class AppDrawer extends Component {
             <Switch>
                 <Route exact path="/" render={() => <Redirect to="/intro"/>}/>
                 <Route path="/signin" component={Signin}/>
+                <Route path="/signup" component={Signup}/>
                 <Route path="/intro" component={Intro} />
                 <Route path="/customer" component={Details} />
                 <Route

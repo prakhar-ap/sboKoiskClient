@@ -70,7 +70,8 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-function SignIn({AppStore, SignInStore}) {
+
+function SignUp({AppStore, SignInStore}) {
     const {
         form,
         handleSubmit,
@@ -95,9 +96,35 @@ function SignIn({AppStore, SignInStore}) {
                     <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
-                    Sign in
+                    Sign up
                 </Typography>
                 <form className={classes.form} noValidate>
+                    <Grid container spacing={2} justify="space-evenly">
+                        <Grid item xs={6}>
+                            <TextField
+                                variant="outlined"
+                                margin="normal"
+                                required
+                                id="firstname"
+                                label="First Name"
+                                name="firstname"
+                                type="text"
+                                className={classes.textField}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                variant="outlined"
+                                margin="normal"
+                                required
+                                name="lastname"
+                                label="Last Name"
+                                type="text"
+                                id="lastname"
+                                className={classes.textField}
+                            />
+                        </Grid>
+                    </Grid>
                     <TextField
                         variant="outlined"
                         margin="normal"
@@ -107,7 +134,6 @@ function SignIn({AppStore, SignInStore}) {
                         label="Email Address"
                         name="email"
                         autoComplete="email"
-                        onChange={_handleChange}
                         className={classes.textField}
                     />
                     <TextField
@@ -119,7 +145,6 @@ function SignIn({AppStore, SignInStore}) {
                         label="Password"
                         type="password"
                         id="password"
-                        onChange={_handleChange}
                         className={classes.textField}
                         autoComplete="current-password"
                     />
@@ -127,12 +152,10 @@ function SignIn({AppStore, SignInStore}) {
                         control={
                             <Checkbox
                                 className={classes.checkbox}
-                                onClick={_handleCheck}
                                 value="remember"
-                                name="rememberMe"
                                 color="primary" />
                         }
-                        label="Remember me"
+                        label="I want to receive inspiration, marketing promotions and updates via email."
                     />
                     <Button
                         type="submit"
@@ -141,17 +164,13 @@ function SignIn({AppStore, SignInStore}) {
                         color="primary"
                         className={classes.submit}
                     >
-                        Sign In
+                        Sign Up
                     </Button>
                     <Grid container>
-                        <Grid item xs>
-                            <Link href="#" variant="body2"  style={{color: '#90caf9'}}>
-                                Forgot password?
-                            </Link>
-                        </Grid>
+                        <Grid item xs />
                         <Grid item>
-                            <Link href="/signup" variant="body2" style={{color: '#90caf9'}}>
-                                {"Don't have an account? Sign Up"}
+                            <Link href="/signin" variant="body2" style={{color: '#90caf9'}}>
+                                {"Already have an account? Sign In"}
                             </Link>
                         </Grid>
                     </Grid>
@@ -164,9 +183,9 @@ function SignIn({AppStore, SignInStore}) {
     );
 }
 
-SignIn.propTypes = {
+SignUp.propTypes = {
     AppStore: PropTypes.object.isRequired,
     SignInStore: PropTypes.object.isRequired
 }
 
-export default inject('AppStore', 'SignInStore')(observer(SignIn));
+export default inject('AppStore', 'SignInStore')(observer(SignUp));

@@ -16,14 +16,13 @@ import FormWrapper from "../common/wrappers/FormWrapper";
 const {apiUrl} = config;
 const BootstrapButton = withStyles({
     root: {
-        boxShadow: 'none',
         textTransform: 'none',
         fontSize: 14,
         padding: '6px 10px',
         border: '1px solid',
         lineHeight: 1.5,
-        backgroundColor: '#3598dc',
-        borderColor: '#3598dc',
+        backgroundColor: 'transparent',
+        color: '#32c5d2',
         fontFamily: [
             '-apple-system',
             'BlinkMacSystemFont',
@@ -37,21 +36,18 @@ const BootstrapButton = withStyles({
             '"Segoe UI Symbol"',
         ].join(','),
         '&:hover': {
-            backgroundColor: '#0069d9',
-            borderColor: '#0062cc',
-            boxShadow: 'none',
+            borderColor: '#32c5d2',
         },
         '&:active': {
-            boxShadow: 'none',
-            backgroundColor: '#0062cc',
-            borderColor: '#005cbf',
+            borderColor: '#32c5d2',
         },
         '&:focus': {
             boxShadow: '0 0 0 0.2rem rgba(0,123,255,.5)',
         },
         '&:disabled':{
-            backgroundColor: '#51abe8',
-            color: 'whitesmoke'
+            backgroundColor: 'transparent',
+            color: '#32c5d2',
+            boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)',
         }
     },
 })(Button);
@@ -78,11 +74,10 @@ const dark = makeStyles((theme) => ({
         backgroundColor: '#333',
     },
     menuItem: {
-        backgroundColor: '#707070',
+        backgroundColor: '#333',
         color: 'black',
         '&:hover': {
-            background: 'darkgrey',
-            color: 'whitesmoke'
+            background: '#707070',
         },
         '.Mui-select': {
             color: 'black',
@@ -97,7 +92,6 @@ const dark = makeStyles((theme) => ({
 function HomeDashboard({AppStore, HomeStore}) {
     const pincodeRef = React.createRef();
     const subdistrictRef = React.createRef();
-    const filterRef = React.createRef();
 
     const {
         showVendors,
@@ -321,24 +315,14 @@ function HomeDashboard({AppStore, HomeStore}) {
             <br />
             {showVendors && ( // filters
                 <Grid container spacing={2} item xs={12} className={'filters'}>
-                    <Grid item xs={2} />
                     <Grid item xs={3}>
                         <AutoCompleteWrapper
                             id={'filterName'}
                             name={"filterName"}
                             inputArray={filter.name}
                             isDark={AppStore.isDark}
+                            label="Name"
                             value={form.filterName}
-                            onChange={_handleChange}
-                        />
-                    </Grid>
-                    <Grid item xs={2}>
-                        <AutoCompleteWrapper
-                            id={'filterMobile'}
-                            name={"filterMobile"}
-                            isDark={AppStore.isDark}
-                            inputArray={filter.mobile}
-                            value={form.filterMobile}
                             onChange={_handleChange}
                         />
                     </Grid>
@@ -347,6 +331,7 @@ function HomeDashboard({AppStore, HomeStore}) {
                             name={"filterPincode"}
                             value={form.filterPincode}
                             isDark={AppStore.isDark}
+                            label="Pincode"
                             onChange={_handleChange}>
                             {filter.pincode.map((pc) => (
                                 <MenuItem
@@ -357,11 +342,12 @@ function HomeDashboard({AppStore, HomeStore}) {
                             ))}
                         </SelectWrapper>
                     </Grid>
-                    <Grid item xs={3}>
+                    <Grid item xs={2}>
                         <SelectWrapper
                             name={"filterBank"}
                             value={form.filterBank}
                             isDark={AppStore.isDark}
+                            label="Bank"
                             onChange={_handleChange}>
                             {filter.banks.map((bank) => (
                                 <MenuItem
@@ -372,28 +358,25 @@ function HomeDashboard({AppStore, HomeStore}) {
                             ))}
                         </SelectWrapper>
                     </Grid>
-                    <Grid item xs={9} />
-                    <Grid container spacing={2} justify="space-between" item xs={3}>
-                        <Grid item lg={6} sm={6}>
-                            <BootstrapButton
-                                variant="contained"
-                                color="primary"
-                                onClick={_handleFilter}
-                                disabled={!isFilterFilled}>
-                                Filter
-                            </BootstrapButton>
-                        </Grid>
-                        <Grid item lg={6} sm={6}>
-                            <Grid item xs={6}>
-                                <BootstrapButton
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={_handleClear}
-                                    disabled={!isFilterFilled}>
-                                    Clear
-                                </BootstrapButton>
-                            </Grid>
-                        </Grid>
+                    <Grid item xs={1} className={'filterButton'}>
+                        <BootstrapButton
+                            variant="contained"
+                            color="primary"
+                            style={{width: '100%'}}
+                            onClick={_handleFilter}
+                            disabled={!isFilterFilled}>
+                            Filter
+                        </BootstrapButton>
+                    </Grid>
+                    <Grid item xs={1} className={'filterButton'}>
+                        <BootstrapButton
+                            variant="contained"
+                            color="primary"
+                            style={{width: '100%'}}
+                            onClick={_handleClear}
+                            disabled={!isFilterFilled}>
+                            Clear
+                        </BootstrapButton>
                     </Grid>
                 </Grid>
             )}

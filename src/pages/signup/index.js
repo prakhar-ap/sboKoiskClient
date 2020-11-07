@@ -1,23 +1,23 @@
 import {inject, Provider} from 'mobx-react';
 import React, {useState} from "react";
-import SignInStore from '../../components/signin/SignInStore';
-import SignIn from '../../components/signin/SignIn';
+import SignUpStore from '../../components/signup/SignUpStore';
+import SignUp from '../../components/signup/SignUp';
 import PropTypes from 'prop-types';
 import Layout from "../../layout/Layout";
 
-function Signin({AppStore}) {
-    const [Store] = useState(new SignInStore());
+function Signup({AppStore}) {
+    const [Store] = useState(new SignUpStore());
     return (
         <Provider SignInStore={Store}>
             <Layout hideBar isDark>
-            <SignIn />
+            <SignUp />
             </Layout>
         </Provider>
     )
 }
 
-Signin.propTypes = {
+Signup.propTypes = {
     AppStore: PropTypes.object.isRequired
 }
 
-export default inject('AppStore')(Signin);
+export default inject('AppStore')(Signup);

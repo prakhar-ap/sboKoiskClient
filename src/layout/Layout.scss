@@ -16,21 +16,9 @@
 .dark {
   color: white;
   background-color: var(--dark-theme);
-
-  .Mui-selected {
-    color: black;
-    background-color: white;
-  }
-
 }
 
 .light {
   color: #0f1117;
   background-color: var(--ghost-white);
-}
-
-.topHead {
-  width: 100%;
-  padding-top: 20px;
-  min-width: var(--windowsMinWidth);
 }

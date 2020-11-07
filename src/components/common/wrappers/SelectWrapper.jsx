@@ -1,5 +1,4 @@
 import { TextField } from '@material-ui/core';
-import Tooltip from '@material-ui/core/Tooltip';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 
@@ -7,6 +6,7 @@ const light = theme => ({
     root: {
         fontSize: '0.7rem',
         backgroundColor: 'white',
+        boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)',
         '& icon': {
             backgroundColor: 'black',
         }
@@ -18,6 +18,7 @@ const dark = theme => ({
         fontSize: '0.7rem',
         backgroundColor: '#333',
         color: 'whitesmoke',
+        boxShadow: '0px 1px 5px 0px #FFFFFF',
         '& icon': {
             backgroundColor: 'whitesmoke',
         },
@@ -41,6 +42,7 @@ class SelectWrapper extends Component {
                 ? this.props.children[0].props.value
                 : this.props.value;
         const classes = !this.props.isDark ? light() : dark();
+        const { label } = this.props;
         const textField = (
             <TextField
                 name={this.props.name}
@@ -63,15 +65,13 @@ class SelectWrapper extends Component {
             </TextField>
         );
 
-        if (this.props.tooltipText) {
+        if(label) {
             return (
-                <Tooltip
-                    title={this.props.tooltipText}
-                    placement={this.props.tooltipPlacement}
-                    arrow>
+                <div>
+                    <div className="label">{label}</div>
                     {textField}
-                </Tooltip>
-            );
+                </div>
+            )
         }
 
         return textField;
